@@ -1,0 +1,25 @@
+* Design Goals
+*** Be fast and robust enough to use in production
+*** Be easy enough to use for prototyping
+*** Be simple to understand
+
+* Components
+*** Source
+***** Implements CopperEmitter
+*** Pipe
+***** Takes an arrayref of Copper::Source 
+******* Autoboxes if given only one
+******* Defaults to 
+***** Takes an arrayref of Copper::Sinks
+******* Autoboxes if given only one
+******* Defaults to Copper::Sink::STDOUT
+***** Takes a CODEREF that implements a transform
+*** Sink
+
+* Thoughts
+*** Transforms should be coro's so they don't stall processing
+*** Should you be able to give an array of transforms?
+
+Probably not.  You can do the same thing simply by wrapping subs in
+subs and passing in the outermost sub.
+

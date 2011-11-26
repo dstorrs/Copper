@@ -1,0 +1,54 @@
+#  This file specifies which filename patterns to ignore.
+#  See http://www.kernel.org/pub/software/scm/git/docs/gitignore.html
+#  for the full syntax
+#
+#  Lines starting with # are comments, of course.
+
+.DS_Store
+*~
+*.ignore
+*.orig
+msg
+temp
+nuke_me
+nuke_me.*
+.sass-cache
+out
+foo
+channelmeter.db
+.gz
+.zip
+.tar
+.tgz
+.tbz2
+backups
+logs
+channelmeter_test.db
+t.pl
+test.pl
+*.bak
+inc/
+blib/
+pm_to_blib
+*.swp
+*~*
+*.gz
+META.yml
+Makefile
+db_import
+biz
+.emacs.desktop
+.emacs.desktop.lock
+fix_repos
+select_into.sql
+load_from.sql
+*.pid
+.dropbox
+.frenzy
+Icon*
+temp.html
+make_page.pl
+dbconf
+test_output/
+dirwalk_infiles
+var
