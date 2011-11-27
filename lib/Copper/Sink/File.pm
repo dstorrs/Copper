@@ -16,6 +16,13 @@ has 'filepath' => (
 	required => 1,
 );
 
+has 'format' => (
+	is => 'ro',
+	isa => 'CodeRef',
+	predicate => 'has_format',
+	required => 0,
+);
+
 has '_fh' => (
 	is => 'ro',
 	isa => 'IO::File',
@@ -30,8 +37,16 @@ sub _build__fh {
 
 sub drain {
 	my $self = shift;
+	my @args = @_;
+	
 	my $fh = $self->_fh;
-	print $fh @_;
+	if ( $self->has_format ) {
+		print $fh $self->format->( @args );   
+	}
+	else {		
+		print $fh @args;
+	}
+	
 	return;
 }
 
@@ -76,6 +91,13 @@ REQUIRED attribute.  Where to write the file.
 =head2 drain
 
 Prints its arguments to the file specified by $self->filepath.
+
+=head2 format
+
+OPTIONAL attribute.  If defined, this should should be a CODEREF.
+Arguments will be passed through C<format()> before being sent to
+C<drain()>; this is a convenient place to (e.g.) insert spaces /
+commas / translate to JSON, etc.
 
 =head2 finalize
 
