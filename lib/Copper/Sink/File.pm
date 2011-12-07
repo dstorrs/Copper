@@ -54,7 +54,6 @@ sub finalize {
 	my $self = shift;
 
 	$self->_fh->flush;
-	#$self->SUPER->finalize;  #@@TODO:  Been too long...what's the exact syntax for calling SUPER?
 }
 
 1;
