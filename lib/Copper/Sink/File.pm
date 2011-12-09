@@ -35,16 +35,20 @@ sub _build__fh {
 	return $fh;
 }
 
+sub _print {
+	my $self = shift;
+	my $fh = $self->_fh;
+	print $fh @_;
+}
+
 sub drain {
 	my $self = shift;
-	my @args = @_;
-	
-	my $fh = $self->_fh;
+
 	if ( $self->has_format ) {
-		print $fh $self->format->( @args );   
+		$self->_print( $self->format->( @_ ) );   
 	}
 	else {		
-		print $fh @args;
+		$self->_print( @_ );   
 	}
 	
 	return;

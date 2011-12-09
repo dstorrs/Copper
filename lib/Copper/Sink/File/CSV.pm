@@ -18,37 +18,28 @@ has 'csv' => (
 );
 sub _build_csv {
 	my $self = shift;
-	
+
 	my $csv = Text::CSV->new(
-		{ binary => 1, sep_char => ",", escape_char => '"', eol => "\n", quote_char => '"' }
+		{
+			binary => 1, sep_char => ",", escape_char => '"', eol => "\n", quote_char => '"' }
 	) or die "Could not create CSV object: $!";
-	
+
 }
 
-sub drain {
+around 'drain' => sub {
+	my $orig = shift;
 	my $self = shift;
-	my @rows = @_;
+	my @lines = @_;
 
 	my $csv = $self->csv;
-	my $fh  = $self->_fh;
-	
-	for my $row ( @rows ) {
-		if ( $self->has_format ) {
-			$csv->print( $fh, $self->format->( $row ) );
-		}
-		else {
-			$csv->print( $fh, $row );
-		}
-	}
-	
-	return;
-}
 
-sub finalize {
-	my $self = shift;
+	my $prep = sub {
+		$csv->combine( @{ shift() } );
+		return $csv->string();
+	};
 
-	$self->_fh->flush;
-}
+	$self->$orig( map { $prep->($_) } @lines );
+};
 
 1;
 
@@ -69,15 +60,15 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-A very simplistic proof-of-concept for writing files via Copper.  Does
-not support append mode, or any sort of options on the filehandle --
-it is always :utf8 and mode is '>'.
+A very simplistic proof-of-concept for writing CSV files via Copper.
+Does not support append mode, or any sort of options on the filehandle
+or the CSV object that manages the data combination.
 
 =head1 METHODS
 
 =head2 filepath
 
-REQUIRED attribute.  Where to write the file.  
+REQUIRED attribute.  Where to write the file.
 
 =cut
 
@@ -158,5 +149,3 @@ See http://dev.perl.org/licenses/ for more information.
 
 
 =cut
-
-1; # End of Copper::Sink::File

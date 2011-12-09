@@ -29,9 +29,10 @@ is(1, 1, 'testing framework is working');
 #    Verify that basic data is correct
 is( scalar slurp($correct_file), qq{Id,Msg\n1,"Msg #1\t"\n2,"Msg #2\t"\n3,"Msg #3\t"\n}, "Basic data is correct" );
 
-
+#    Does the most minimal version work?
 lives_ok {  new_sink() } "Can create a Copper::Sink::File::CSV with default settings";
 
+#    Can we actually print some data?
 test 'Basic Sink...CSV file with id and simple text message including spaces and tabs' => sub {
 	my $sink = setup();
 	
@@ -107,23 +108,6 @@ unlink $correct_file;     		#    Clean up
 sub new_sink {
  	Copper::Sink::File::CSV->new( filepath => $test_filepath, @_ );
 }
-
-# sub file_contains {
-# 	my $func = shift;
-# 	my $expected = shift;
-# 	my $msg      = shift;
-
-# 	test "contents match" => sub {
-# 		unlink $test_filepath;
-# 		ok( ! -e $test_filepath, "Before create, file does not exist" );
-# 		my $sink = $func->();
-# 		$sink->drain( msgs() );
-# 		$sink->finalize;
-# 		ok( -e $test_filepath, "After create, file exists" );
-# 		is( scalar slurp($test_filepath), $expected, $msg );
-# 		unlink $test_filepath;
-# 	};
-# }
 
 sub msgs {
 	return ( 

@@ -9,6 +9,9 @@ use Test::Exception;
 use Test::Group;
 use Data::Dumper;
 use File::Slurp qw/slurp/;
+use FindBin qw/$Bin/;
+
+use lib "$Bin/../lib";
 
 use Copper::Sink::File;
 
@@ -31,7 +34,7 @@ file_contains(
 		new_sink( format => sub { join("\n", @_) } )
 	},
 	"Msg #1\t\nMsg #2\t\nMsg #3\t",
-	"Newlines after each line",
+	"Newlines after each line except the last",
 );
 
 
