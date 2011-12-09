@@ -18,12 +18,14 @@ is(1, 1, 'testing framework is working');
 
 lives_ok {  new_sink() } "Can create a Copper::Sink::File with default settings";
 
+#    Test #1
 file_contains(
 	sub { new_sink() },
 	"Msg #1\tMsg #2\tMsg #3\t",
 	"Default case",
 );
 
+#    Test #2
 file_contains(
 	sub {
 		new_sink( format => sub { join("\n", @_) } )
