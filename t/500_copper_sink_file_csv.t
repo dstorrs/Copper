@@ -16,18 +16,19 @@ use lib "$Bin/../lib";
 
 use Copper::Sink::File::CSV;
 
+$| = 1;
+
 my $test_filepath = '/tmp/copper_sink_test' . time();
 my $correct_file = "$test_filepath.correct";
-
-my $fh = correct_file_fh();
-my $csv = new_csv();
-$csv->print($fh, $_) for msgs();
-close_correct_file_fh();
 
 is(1, 1, 'testing framework is working');
 
 #    Verify that basic data is correct
-is( scalar slurp($correct_file), qq{Id,Msg\n1,"Msg #1\t"\n2,"Msg #2\t"\n3,"Msg #3\t"\n}, "Basic data is correct" );
+is(
+	set_correct( rows => [ msgs() ] ),
+	qq{Id,Msg\n1,"Msg #1\t"\n2,"Msg #2\t"\n3,"Msg #3\t"\n},
+	"Basic data is correct"
+);
 
 #    Does the most minimal version work?
 lives_ok {  new_sink() } "Can create a Copper::Sink::File::CSV with default settings";
@@ -51,16 +52,40 @@ done_testing();
 ###----------------------------------------------------------------
 ###----------------------------------------------------------------
 
+sub set_correct {
+	my %args = (
+		csv_args => {},
+		@_
+	);
+	$args{csv_args} = {
+		binary => 1, sep_char => ",", escape_char => '"', eol => "\n", quote_char => '"',		
+		%{ $args{csv_args} },
+	};
+	
+	my $csv = $args{csv} || Text::CSV->new( $args{csv_args} ) or die "Could not create CSV object: $!";
+	my $fh  = correct_file_fh();
+	for (@{ $args{rows} }) {
+		$csv->print( $fh, $_);
+	}
+	close_correct_file_fh();
+
+	scalar slurp($correct_file);
+}
+
+###----------------------------------------------------------------
+
 {
 	my $fh;
 	
 	sub correct_file_fh {
-		open $fh, ">:encoding(utf8)", $correct_file or die "$correct_file: $!";
+		if ( ! $fh ) {
+			open $fh, ">:encoding(utf8)", $correct_file or die "$correct_file: $!";
+		}
 		return $fh;
 	}
 	
 	sub close_correct_file_fh {
-		$fh->flush;
+		$fh->flush if $fh;
 		undef $fh;
 	}
 }
