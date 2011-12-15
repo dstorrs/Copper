@@ -60,6 +60,11 @@ sub finalize {
 	$self->_fh->flush;
 }
 
+sub DEMOLISH {
+	my $self = shift;
+	$self->finalize;
+}
+
 1;
 
 __END__
