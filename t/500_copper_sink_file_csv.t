@@ -115,6 +115,20 @@ test 'Sink with specified CSV obj' => sub {
 	);
 };
 
+test 'Verify that csv_args() works' => sub {
+
+	eval { new_sink( csv_args => { sep_char => 'X', } )->drain( msgs() ) };
+	match_and_teardown(
+		join(   "\n",
+				qq{IdXMsg},
+				qq{1X"Msg #1\t"},
+				qq{2X"Msg #2\t"},
+				qq{3X"Msg #3\t"},
+			) . "\n",
+		"spec'd csv_args in chained call"
+	);
+};
+
 done_testing();
 
 ###----------------------------------------------------------------

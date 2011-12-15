@@ -19,11 +19,22 @@ has 'csv' => (
 sub _build_csv {
 	my $self = shift;
 
-	my $csv = Text::CSV->new(
-		{
-			binary => 1, sep_char => ",", escape_char => '"', eol => "\n", quote_char => '"' }
-	) or die "Could not create CSV object: $!";
+	my $csv = Text::CSV->new({ %{_default_csv_args()}, %{$self->csv_args} })
+		or die "Could not create CSV object: $!";
+}
 
+has 'csv_args' => (
+	is   => 'ro',
+	isa  => 'Maybe[HashRef]',
+	required => 0,
+	lazy_build => 1,
+);
+sub _build_csv_args { shift->_default_csv_args } # This exists only to be a hook
+
+sub _default_csv_args {
+	+{
+		binary => 1, sep_char => ",", escape_char => '"', eol => "\n", quote_char => '"'
+	}
 }
 
 around 'drain' => sub {
