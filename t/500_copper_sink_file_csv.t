@@ -23,6 +23,19 @@ my $filepath__expected = "$test_filepath.expected";
 
 is(1, 1, 'testing framework is working');
 
+test "csv() works" => sub {
+	my $csv;
+	isa_ok( csv(), 'Text::CSV' );
+
+	$csv = csv(	binary => 0, sep_char => ":", escape_char => 'X', eol => "\t", quote_char => "'" );
+	isa_ok( $csv, 'Text::CSV' );
+	is( $csv->binary,      0,     "csv->binary      != 0" );
+	is( $csv->sep_char,    ':',   "csv->sep_char    != :" );
+	is( $csv->escape_char, 'X',   "csv->escape_char != X" );
+	is( $csv->eol,         "\t",  "csv->eol         != tab" );
+	is( $csv->quote_char,  "'",   "csv->quote_char  != '" );
+};
+
 #    Verify that basic data is correct
 is(
 	expected_text( rows => [ msgs() ] ),
@@ -67,23 +80,62 @@ test 'Basic Sink; CSV file with id, simple text message including spaces, embedd
 	);
 };
 
+test 'Sink with specified CSV obj' => sub {
+	my $csv_args = { eol => "\n\n", sep_char => "\t" };
+	
+	my $sink = setup( csv => csv( %$csv_args ) );
+	
+	my $expected_output =
+		qq{Day\t"Daily Average Sales"\n\n"Mon\n(first Mon of month)"\t1\n\nMon\t1\n\nTue\t0\n\nWeds\t-1\n\nThurs\t1.22\n\nFriday\t-1.27\n\nSat\t-0.2\n\nSun\t0.7\n\n};
+
+	my @input = (
+		[ 'Day', q{Daily Average Sales} ],
+		[ qq{Mon\n(first Mon of month)}, 1 ],
+		[ 'Mon', 1 ],
+		[ 'Tue', 0 ],
+		[ 'Weds', -1 ],
+		[ 'Thurs', 1.22 ],
+		[ 'Friday', -1.27 ],
+		[ 'Sat', -0.2 ],
+		[ 'Sun', 0.7 ],
+	);
+	
+	is(
+		expected_text( rows => \@input, csv_args => $csv_args ),
+		$expected_output,
+		"Text::CSV output is as expected"
+	);
+
+	$sink->drain( @input );
+	$sink->finalize;
+	
+	match_and_teardown(
+		$expected_output,
+		'Basic Sink; CSV file with id, simple text message including spaces, embedded \n, and various kinds of numbers'
+	);
+};
+
 done_testing();
 
 ###----------------------------------------------------------------
 ###----------------------------------------------------------------
 ###----------------------------------------------------------------
 
-sub expected_text {
+sub csv {
 	my %args = (
-		csv_args => {},
+		binary => 1, sep_char => ",", escape_char => '"', eol => "\n", quote_char => '"',		
 		@_
 	);
-	$args{csv_args} = {
-		binary => 1, sep_char => ",", escape_char => '"', eol => "\n", quote_char => '"',		
-		%{ $args{csv_args} },
-	};
+
+	return Text::CSV->new( \%args ) or die "Could not create CSV object: $!";	
+}
+
+###----------------------------------------------------------------
+
+sub expected_text {
+	my %args = ( csv_args => {}, @_ );
 	
-	my $csv = $args{csv} || Text::CSV->new( $args{csv_args} ) or die "Could not create CSV object: $!";
+	my $csv = csv( %{$args{csv_args}} );
 	my $fh  = correct_file_fh();
 	for (@{ $args{rows} }) {
 		$csv->print( $fh, $_);
@@ -109,12 +161,6 @@ sub expected_text {
 		$fh->flush if $fh;
 		undef $fh;
 	}
-}
-
-sub new_csv {
-	my $csv = Text::CSV->new(
-		{ binary => 1, sep_char => ",", escape_char => '"', eol => "\n", quote_char => '"', @_ }
-	) or die "Could not create CSV object: $!";
 }
 
 sub setup {
