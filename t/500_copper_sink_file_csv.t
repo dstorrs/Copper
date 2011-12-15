@@ -19,13 +19,13 @@ use Copper::Sink::File::CSV;
 $| = 1;
 
 my $test_filepath = '/tmp/copper_sink_test' . time();
-my $correct_file = "$test_filepath.correct";
+my $filepath__expected = "$test_filepath.expected";
 
 is(1, 1, 'testing framework is working');
 
 #    Verify that basic data is correct
 is(
-	set_correct( rows => [ msgs() ] ),
+	expected_text( rows => [ msgs() ] ),
 	qq{Id,Msg\n1,"Msg #1\t"\n2,"Msg #2\t"\n3,"Msg #3\t"\n},
 	"Basic data is correct"
 );
@@ -34,15 +34,36 @@ is(
 lives_ok {  new_sink() } "Can create a Copper::Sink::File::CSV with default settings";
 
 #    Can we actually print some data?
-test 'Basic Sink...CSV file with id and simple text message including spaces and tabs' => sub {
+test 'Basic Sink; CSV file with id, simple text message including spaces, embedded \n, and various kinds of numbers' => sub {
 	my $sink = setup();
 	
-	$sink->drain( msgs() );
-	$sink->finalize;
+	my $expected_output =
+		qq{Day,"Daily Average Sales"\n"Mon\n(first Mon of month)",1\nMon,1\nTue,0\nWeds,-1\nThurs,1.22\nFriday,-1.27\nSat,-0.2\nSun,0.7\n};
 
+	my @input = (
+		[ 'Day', q{Daily Average Sales} ],
+		[ qq{Mon\n(first Mon of month)}, 1 ],
+		[ 'Mon', 1 ],
+		[ 'Tue', 0 ],
+		[ 'Weds', -1 ],
+		[ 'Thurs', 1.22 ],
+		[ 'Friday', -1.27 ],
+		[ 'Sat', -0.2 ],
+		[ 'Sun', 0.7 ],
+	);
+	
+	is(
+		expected_text( rows => \@input ),
+		$expected_output,
+		"Text::CSV output is as expected"
+	);
+
+	$sink->drain( @input );
+	$sink->finalize;
+	
 	match_and_teardown(
-		qq{Id,Msg\n1,"Msg #1	"\n2,"Msg #2	"\n3,"Msg #3	"\n},
-		'Basic Sink...CSV file with id and simple text message including spaces and tabs'
+		$expected_output,
+		'Basic Sink; CSV file with id, simple text message including spaces, embedded \n, and various kinds of numbers'
 	);
 };
 
@@ -52,7 +73,7 @@ done_testing();
 ###----------------------------------------------------------------
 ###----------------------------------------------------------------
 
-sub set_correct {
+sub expected_text {
 	my %args = (
 		csv_args => {},
 		@_
@@ -69,7 +90,7 @@ sub set_correct {
 	}
 	close_correct_file_fh();
 
-	scalar slurp($correct_file);
+	scalar slurp($filepath__expected);
 }
 
 ###----------------------------------------------------------------
@@ -79,7 +100,7 @@ sub set_correct {
 	
 	sub correct_file_fh {
 		if ( ! $fh ) {
-			open $fh, ">:encoding(utf8)", $correct_file or die "$correct_file: $!";
+			open $fh, ">:encoding(utf8)", $filepath__expected or die "$filepath__expected: $!";
 		}
 		return $fh;
 	}
@@ -112,23 +133,8 @@ sub match_and_teardown {
  	unlink $test_filepath;
 }
 
-# file_contains(
-# 	sub { new_sink() },
-# 	"Msg #1\tMsg #2\tMsg #3\t",
-# 	"Default case",
-# );
-
-# file_contains(
-# 	sub {
-# 		new_sink( format => sub { join("\n", @_) } )
-# 	},
-# 	"Msg #1\t\nMsg #2\t\nMsg #3\t",
-# 	"Newlines after each line",
-# );
-
-
 unlink $test_filepath;			#    Clean up
-unlink $correct_file;     		#    Clean up
+unlink $filepath__expected;		#    Clean up
 
 sub new_sink {
  	Copper::Sink::File::CSV->new( filepath => $test_filepath, @_ );
