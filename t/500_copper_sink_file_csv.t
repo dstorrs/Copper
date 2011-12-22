@@ -129,6 +129,50 @@ test 'Verify that csv_args() works' => sub {
 	);
 };
 
+test "verify examples from POD" => sub {
+    my $sink;
+    my @rows = (
+        [ qw/Id Date        Amount    Category/,      'Transaction Notes' ],
+        [ qw/1  2011-12-10  $25.23    Food/,          'Groceries' ],
+        [ qw/2  2011-12-12  $19.08    Food/,          'Dinner at "Mediteranee"' ],
+        [ qw/3  2011-12-12  $4.67     Indulgence/,    'Coffee @ 4-Barrel Coffee (GOTTA cut back, but mmmm!)' ],
+    );
+    my $check_rows = sub {
+        my $sink = shift;
+		my $msg = shift;
+		my $expected = shift;
+		
+        $sink->drain( @rows );
+        $sink->finalize;  #  Or just let the $sink go out of scope
+		
+		my $filepath = $sink->filepath;
+		ok( -e $filepath && -f _, "file exists and is regular file" );
+		is( slurp($filepath), $expected, $msg );
+    };
+
+	my $expected;
+    $check_rows->(
+		Copper::Sink::File::CSV->new( filepath => '/tmp/some_file.csv' ),
+		"embedded quotes work",
+		q{Id,Date,Amount,Category,"Transaction Notes"
+1,2011-12-10,$25.23,Food,Groceries
+2,2011-12-12,$19.08,Food,"Dinner at ""Mediteranee"""
+3,2011-12-12,$4.67,Indulgence,"Coffee @ 4-Barrel Coffee (GOTTA cut back, but mmmm!)"
+},
+	);
+
+    #    This...
+    $check_rows->( 
+		Copper::Sink::File::CSV->new( filepath => '/tmp/some_file.csv', csv_args => {sep_char => "\t"} ),
+		"punctuation and such, no issues",
+		$expected = qq{Id\tDate\tAmount\tCategory\t"Transaction Notes"
+1\t2011-12-10\t\$25.23\tFood\tGroceries
+2\t2011-12-12\t\$19.08\tFood\t"Dinner at ""Mediteranee"""
+3\t2011-12-12\t\$4.67\tIndulgence\t"Coffee @ 4-Barrel Coffee (GOTTA cut back, but mmmm!)"
+},
+	);
+};
+
 done_testing();
 
 ###----------------------------------------------------------------
@@ -184,13 +228,14 @@ sub setup {
 }
 
 sub match_and_teardown {
-	my ($expected, $msg) = @_;
+	my ($expected, $msg) = (shift, shift);
+	my $filepath = shift || $test_filepath;
 	
- 	ok( -e $test_filepath, "After test, file exists" );
+ 	ok( -e $filepath, "After test, file exists" );
 
- 	is( scalar slurp($test_filepath), $expected, $msg );
+ 	is( scalar slurp($filepath), $expected, $msg );
 
- 	unlink $test_filepath;
+ 	unlink $filepath;
 }
 
 unlink $test_filepath;			#    Clean up

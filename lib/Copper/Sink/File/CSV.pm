@@ -71,9 +71,58 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-A very simplistic proof-of-concept for writing CSV files via Copper.
-Does not support append mode, or any sort of options on the filehandle
-or the CSV object that manages the data combination.
+A sink for writing CSV files via Copper.
+
+    #    Some simply financials...
+    my $sink;
+    my @rows = (
+        [ qw/Id Date        Amount    Category/,      'Transaction Notes' ],
+        [ qw/1  2011-12-10  $25.23    Food/,          'Groceries' ],
+        [ qw/2  2011-12-12  $19.08    Food/,          'Dinner at "Mediteranee"' ],
+        [ qw/3  2011-12-12  $4.67     Indulgence/,    'Coffee @ 4-Barrel Coffee (GOTTA cut back, but mmmm!)' ],
+    );
+    sub write_rows {
+        my $sink = shift;
+        $sink->drain( @rows );
+        $sink->finalize;  #  Or just let the $sink go out of scope
+    }
+
+    #    This...
+    $sink = Copper::Sink::File::CSV->new( filepath => '/tmp/some_file.csv' );
+    write_rows( $sink );
+
+    #    ...clobbers /tmp/some_file.csv and outputs the following to that file:
+    Id,Date,Amount,Category,"Transaction Notes" 
+    1,2011-12-10,$25.23,Food,Groceries 
+    2,2011-12-12,$19.08,Food,"Dinner at ""Mediteranee"" 
+    3,2011-12-12,$4.67,Indulgence,"Coffee @ 4-Barrel Coffee (GOTTA cut back, but mmmm!)" 
+
+    #    This...
+    $sink = Copper::Sink::File::CSV->new( filepath => '/tmp/some_file.csv', csv_args => {sep_char => "\t"} );
+    write_rows( $sink );
+    
+    #    ...clobbers /tmp/some_file.csv and outputs the following to that file:
+    Id Date        Amount    Category        "Transaction Notes" 
+    1  2011-12-10  $25.23    Food            Groceries 
+    2  2011-12-12  $19.08    Food            "Dinner at ""Mediteranee"" 
+    3  2011-12-12  $4.67     Indulgence      "Coffee @ 4-Barrel Coffee (GOTTA cut back, but mmmm!)" 
+    
+    
+
+=head1 DESCRIPTION
+
+Uses Text::CSV under the hood, to actually write the files.  The
+default arguments for creating the object are:
+
+    {
+		binary => 1, sep_char => ",", escape_char => '"', eol => "\n", quote_char => '"'
+	}
+
+You can supply your own arguments via the csv_args() attribute; these
+will be merged with the defaults in simple overwrite fashion
+(i.e. anything you supply takes precedence, anything you don't supply
+uses the default).
+
 
 =head1 METHODS
 
