@@ -112,6 +112,10 @@ commas / translate to JSON, etc.
 Flushes the filehandle in order to guarantee that all output has gone
 to disk.
 
+=head2 DEMOLISH
+
+Called by Moose when the object is destroyed.  Will call finalize()
+for you.
 
 =cut
 
