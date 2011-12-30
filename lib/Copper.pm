@@ -7,7 +7,6 @@ use warnings;
 our $VERSION = '0.01';
 
 use Moose;
-use Copper;
 use Copper::Source;
 use Copper::Sink;
 use Copper::Pipe;
