@@ -3,12 +3,13 @@
 use Module::Build;
 
 my $build = Module::Build->new(
-	module_name => 'Foo::Bar',
+	module_name => 'Copper',
 	license  => 'perl',
 
 	requires => {
 		'perl'          => '5.10.1',
 		'Moose'         => '0',
+		'MooseX::Types::Structured'  => '0',
 	},
 
 	build_requires      => {
