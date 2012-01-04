@@ -3,14 +3,21 @@ package Copper::Pipe;
 use strict;
 use warnings;
 
-our $VERSION = '0.01';
-
-
 use Moose;
 
+use Scalar::Util qw/reftype/;
+use List::Util  qw/first/;
+
+use Copper::Types;
 use Copper::Source;
 use Copper::Sink::Return;
 use Copper::Sink::STDOUT;
+
+our $VERSION = '0.01';
+
+
+our @CARP_NOT = ('Moose::Object', 'Class::MOP::Method');
+
 
 sub next {
 	my $self = shift;
@@ -22,9 +29,12 @@ sub next {
 		my $e = $source->next;
 		push @data, $transform->( $e );
 	}
+
+	#  @@TODO: Move this inside the prior 'for' to avoid needing @data
 	for my $sink ( $self->all_sinks ) {
 		push @results, $sink->drain( @data );
 	}
+	
 	return @results;
 }
 
@@ -48,19 +58,14 @@ has 'sources' => (
 has 'sinks' => (
 	traits             => ['Array'],
 	isa                => 'ArrayRef[Copper::Sink]',
-	required           => 0,
+	required           => 0,     # Filled in by BUILDARGS if not
 	handles       => {
 		all_sinks      => 'elements',
 		add_sink       => 'push',
 		map_sinks      => 'map',
 		sink_count     => 'count',
-		#finalize       => 'apply' # Syntax?
 	},
 );
-sub _build_sinks {
-	my $self = shift;
-	return [ Copper::Sink->new( sink => Copper::Sink::STDOUT->new ) ];
-}
 
 has 'transform' => (
 	is => 'ro',
@@ -69,25 +74,80 @@ has 'transform' => (
 );
 sub _build_transform { shift; return sub { @_ } }
 
+has 'filters' => (
+	is => 'ro',
+	isa => 'Maybe[Copper:Filter:Struct]',
+	required => 0,
+	predicate => 'has_filters',
+);
+
 around 'BUILDARGS' => sub {
 	my $orig    = shift;
 	my $self   = shift;
 	my %args    = @_;
 
-	#    Allow either singular or plural 
+	#    Allow either singular or plural
 	$args{sources} ||= $args{source};
-	$args{sinks  } ||= [ $args{sink} || Copper::Sink::Return->new ];
-		
+	$args{sinks  } ||= $args{sink} || Copper::Sink::Return->new;
+	$args{filters} ||= $args{filter};
+
 	#    Autobox sources and sinks
 	{
 		no warnings 'uninitialized';
-		$args{sources} = [ $args{sources} ] unless ref $args{sources} eq 'ARRAY';
-		$args{sinks  } = [ $args{sinks  } ] unless ref $args{sources} eq 'ARRAY';
+		$args{sources} = [ $args{sources} ] unless reftype $args{sources} eq 'ARRAY';
+		$args{sinks  } = [ $args{sinks  } ] unless reftype $args{sinks  } eq 'ARRAY';
 	}
+
 	@_ = %args;
-	
+
 	return $self->$orig(@_);
 };
+
+# sub BUILD {
+# 	my $self = shift;
+
+# 	$self->validate_filters_or_die();
+# }
+
+# sub validate_filters_or_die {
+# 	my $self = shift;
+
+# 	if ( $self->has_filters ) {
+# 		no warnings 'uninitialized';
+
+# 		my $filters = $self->filters;
+
+# 		croak "Hashref for 'filters' attribute must have either 'pre' key, 'post' key, or both"
+# 			unless (exists $filters->{pre}) || (exists $filters->{post});
+
+# 		my ($pre, $post) = map { $filters->{$_} } qw/pre post/;
+
+# 		croak "In 'filters' attribute, value of 'pre' key must be ArrayRef"
+# 			unless (reftype $pre) =~ /ARRAY/;
+
+# 		croak "In 'filters' attribute, if value of 'pre' key is ArrayRef, must be non-empty and all elements must be HashRef"
+# 			if !@$pre || first { (! ref $_) || (reftype $_ ne 'HASH') } @$pre;
+
+# 		croak "Each item in 'pre' filters must be hashref with at least these keys: 'code', 'action'"
+# 			if first { ! (exists $_->{code} && exists $_->{action}) } @$pre;
+
+# 		croak "The 'code' key of each filter value in filters->pre must be a coderef"
+# 			if first { reftype $_->{code} ne 'CODE' } @$pre;		
+
+# 		croak "The 'action' key of each filter value in filters->pre must be 'allow' | 'reject' | hashref"
+# 			if first { ! /^(?:allow|reject)$/ && reftype $_->{action} ne 'HASH' } @$pre;		
+
+# 		my @f = map { ref $_->{action} } @$filters;
+# 		my $msg = "In filters, 'action' keys that are hashrefs must have exactly one key: 'allow' or 'reject'";
+# 		for my $f (@f) {
+# 			my @k = keys %$f;
+# 			croak $msg if @f != 1;
+# 			croak $msg if first { ! /^(?:allow|reject)$/ } @k;
+# 		}
+# 	}
+# }
+
+__PACKAGE__->meta->make_immutable;
 
 1;								# End of Copper::Pipe
 

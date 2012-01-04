@@ -9,11 +9,14 @@ use Test::Exception;
 use Test::Output;
 use Data::Dumper;
 use File::Slurp;
+use FindBin qw/$Bin/;
 
+use lib "$Bin/../lib";
 use Copper::Pipe;
 use Copper::Source::Ints;
 use Copper::Sink::Return;
 use Copper::Sink::File;
+
 
 is(1, 1, 'testing framework is working');
 
@@ -67,7 +70,6 @@ $multi_squared->finalize;
 
 ok( -e $test_file, "$test_file does exist after tests" );
 is( read_file($test_file), "494649811610025", "Test file contents are as expected" );
-
 
 ###----------------------------------------------------------------
 
