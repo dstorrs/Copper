@@ -16,13 +16,6 @@ has 'filepath' => (
 	required => 1,
 );
 
-has 'format' => (
-	is => 'ro',
-	isa => 'CodeRef',
-	predicate => 'has_format',
-	required => 0,
-);
-
 has '_fh' => (
 	is => 'ro',
 	isa => 'IO::File',
@@ -35,6 +28,12 @@ sub _build__fh {
 	return $fh;
 }
 
+has 'format' => (
+	is => 'ro',
+	isa => 'CodeRef',
+	predicate => 'has_format',
+	required => 0,
+);
 sub _print {
 	my $self = shift;
 	my $fh = $self->_fh;
