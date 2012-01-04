@@ -12,11 +12,18 @@ our $VERSION = '0.01';
 
 requires 'next';
 requires 'multi';
-requires 'multi_n';
 
 has 'default_multi' => ( is => 'rw', isa => 'Int', lazy => 1, builder => '_build_default_multi' );
 sub _build_default_multi { 100 }
 
+sub multi_n  {
+	my $self = shift;
+	my $n    = shift;
+	
+	my @results;
+	do { push @results, $self->next } for 1..$n;
+	return @results;
+}
 
 1;
 

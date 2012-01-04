@@ -36,15 +36,6 @@ sub multi  {
 	$self->multi_n( $self->default_multi, @_ );
 }
 
-sub multi_n  {
-	my $self = shift;
-	my $n    = shift;
-	
-	my @results;
-	do { push @results, $self->next } for 1..$n;
-	return @results;
-}
-
 1;
 
 __END__
