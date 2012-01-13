@@ -59,6 +59,7 @@ sub apply_to {
 	return map { $result->($_) } @_;
 }
 
+sub foobar { my $x = 7 }
 around 'BUILDARGS' => sub {
 	my $orig = shift;
 	my $self = shift;
@@ -71,8 +72,18 @@ around 'BUILDARGS' => sub {
 	croak "'when' key must be 'pre' or 'post'"	 unless $args{when} =~ qw/^(pre|post)$/;
 
 	if ( $args{policy} ) {
-		croak "'policy' must be hashref or '" . join('|', _filter_policies()) . "'"
-			unless ( ref $args{policy} eq 'HASH' ) || _filter_policies_match( $args{policy} );
+		my $policy = $args{policy};
+		foobar();
+		my $legal_vals = join('|', _filter_policies());
+		my $msg = "'policy' must be single-key hashref (with key =~ $legal_vals), or string =~ $legal_vals";
+		
+		if ( ref $policy ) {
+			croak $msg 	unless ( ref $policy eq 'HASH' );
+			croak $msg 	unless ( keys %$policy == 1 && _filter_policies_match( keys %$policy ) );
+		}
+		else {
+			croak $msg unless _filter_policies_match( $args{policy} );
+		}
 	}
 
 	return $self->$orig( @_ );	
@@ -107,7 +118,7 @@ Copper::Part::Pipe::Filter defines a filter for use in a Copper::Pipe.
        #    Filter that applies only to certain sinks
        Copper::Part::Pipe::Filter->new(
            when => pre | post,
-           policy => { allow | reject => [qw/sink_name1, sink_name2, .../] },
+           policy => { allow | reject => [qw/sink_name1 sink_name2 .../] },
            code => sub { ... },
        )
 
