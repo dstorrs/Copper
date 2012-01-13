@@ -14,10 +14,10 @@ use Scalar::Util qw/reftype/;
 
 our @CARP_NOT = ('Moose::Object', 'Class::MOP::Method' );
 
-sub filter_policies { qw(allow reject) }
+sub _filter_policies { qw(allow reject) }
 
 sub _filter_policies_match {
-	state $opts = join('|', filter_policies());
+	state $opts = join('|', _filter_policies());
 	state $re = qr/^(?:$opts)$/i;
 	return shift() =~ $re;
 }
@@ -59,14 +59,10 @@ sub apply_to {
 	return map { $result->($_) } @_;
 }
 
-sub foobar {
-	my $x = 7;
-}
-
 around 'BUILDARGS' => sub {
 	my $orig = shift;
 	my $self = shift;
-	foobar();
+
 	my %args = @_;
 
 	no warnings 'uninitialized';
@@ -75,7 +71,7 @@ around 'BUILDARGS' => sub {
 	croak "'when' key must be 'pre' or 'post'"	 unless $args{when} =~ qw/^(pre|post)$/;
 
 	if ( $args{policy} ) {
-		croak "'policy' must be hashref or '" . join('|', filter_policies()) . "'"
+		croak "'policy' must be hashref or '" . join('|', _filter_policies()) . "'"
 			unless ( ref $args{policy} eq 'HASH' ) || _filter_policies_match( $args{policy} );
 	}
 
@@ -126,6 +122,15 @@ Copper::Part::Pipe::Filter defines a filter for use in a Copper::Pipe.
 
 
 =head1 METHODS
+
+=over 4
+
+=item apply_to
+
+Apply the filter to a set of values.
+
+=back
+
 
 =head1 AUTHOR
 
