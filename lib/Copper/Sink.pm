@@ -10,6 +10,11 @@ use Moose::Role;
 
 requires 'drain';
 
+has 'name' => (
+	is => 'ro',
+	isa => 'Str',
+	default => sub { '*unnamed*' },
+);
 
 sub finalize {}  # Can be used to flush filehandles, etc
 

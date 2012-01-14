@@ -9,11 +9,16 @@ use Test::Exception;
 use Test::Group;
 use Test::Output;
 use Data::Dumper;
+use FindBin qw/$Bin/;
+use lib "$Bin/../lib";
 use Copper::Sink::STDOUT;
 
 is(1, 1, 'testing framework is working');
 
 lives_ok {  new_sink() } "Can create a Copper::Sink::STDOUT with default settings";
+
+is( new_sink()->name, '*unnamed*', "Sinks have a default name" );
+is( new_sink( name => 'foo_sink' )->name, 'foo_sink', "can set the name of the sink" );
 
 stdout_is( sub { new_sink()->drain(msgs()) }, join('', msgs()), 'drain, str' );
 
