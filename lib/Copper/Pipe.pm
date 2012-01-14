@@ -10,6 +10,7 @@ use List::Util  qw/first/;
 
 use Copper::Types;
 use Copper::Source;
+use Copper::Source::File;
 use Copper::Sink::Return;
 use Copper::Sink::STDOUT;
 
