@@ -7,6 +7,8 @@ use warnings;
 
 use Moose::Role;
 
+with 'Copper::Role::Named';
+
 our $VERSION = '0.01';
 
 

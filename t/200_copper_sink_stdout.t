@@ -10,7 +10,9 @@ use Test::Group;
 use Test::Output;
 use Data::Dumper;
 use FindBin qw/$Bin/;
+
 use lib "$Bin/../lib";
+
 use Copper::Sink::STDOUT;
 
 is(1, 1, 'testing framework is working');

@@ -1,29 +1,13 @@
-package Copper::Sink;
-
-use v5.10.1;
-use strict;
-use warnings;
-
-our $VERSION = '0.01';
+package Copper::Role::HasTransform;
 
 use Moose::Role;
 
-#with ( map { "Copper::Role::$_" } qw/Named HasTransform/ );
-with ( "Copper::Role::Named", "Copper::Role::HasTransform" );
-
-requires 'drain';
-
-around 'drain' => sub {
-	my ($orig, $self, @vals) = @_;
-
-	$self->$orig( map { $self->transform->( $self, $_ ) } @vals );
-};
-	
-sub finalize {}  # Can be used to flush filehandles, etc
-
-sub DEMOLISH {
-	shift->finalize;
-}
+has 'transform' => (
+	is => 'ro',
+	isa => 'CodeRef',
+	lazy_build => 1,
+);
+sub _build_transform { sub { shift; @_ } }
 
 1;
 
@@ -31,7 +15,7 @@ __END__
 
 =head1 NAME
 
-Copper::Sink
+Copper::Role::HasTransform
 
 =head1 VERSION
 
@@ -42,23 +26,15 @@ Version 0.01
 
 =head1 SYNOPSIS
 
-Copper::Sink is a Role which classes inherit from.  Such classes take
-in values and send them somewhere else -- a disk file, a database,
-STDOUT, etc.  See the specific classes for examples.
+Copper::Role::HasTransform is a simple role that provides the
+'transform' method.  It is used by Copper::Pipe and Copper::Sink
 
 =head1 METHODS
 
-=head2 drain
+=head2 transform
 
-Takes an array of values, sends them on.
-
-=head2 finalize
-
-C<::Sink>s may redefine this to, e.g., flush output handles.
-
-=head2 DEMOLISH
-
-Calls $self->finalize.
+Takes a coderef.  That ref will be passed two values: $self, and the
+$val to be transformed.
 
 =head1 AUTHOR
 
@@ -77,7 +53,7 @@ automatically be notified of progress on your bug as I make changes.
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Copper::Sink
+    perldoc Copper::Role::HasTransform
 
 
 You can also look for information at:
@@ -118,5 +94,3 @@ See http://dev.perl.org/licenses/ for more information.
 
 
 =cut
-
-1; # End of Copper::Sink

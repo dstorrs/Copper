@@ -8,6 +8,7 @@ use Moose;
 use Scalar::Util qw/reftype/;
 use List::Util  qw/first/;
 
+use Copper::Part::Pipe::Filter;
 use Copper::Types;
 use Copper::Source;
 use Copper::Source::File;
@@ -23,15 +24,8 @@ our @CARP_NOT = ('Moose::Object', 'Class::MOP::Method');
 sub next {
 	my $self = shift;
 
-	my $transform = $self->transform;
 	my @results;
-	my @data;
-	for my $source ( $self->all_sources ) {
-		my $e = $source->next;
-		push @data, $transform->( $e );
-	}
-
-	#  @@TODO: Move this inside the prior 'for' to avoid needing @data
+	my @data = map { $_->next } $self->all_sources;
 	for my $sink ( $self->all_sinks ) {
 		push @results, $sink->drain( @data );
 	}
@@ -67,13 +61,6 @@ has 'sinks' => (
 		sink_count     => 'count',
 	},
 );
-
-has 'transform' => (
-	is => 'ro',
-	isa => 'CodeRef',
-	lazy_build => 1,
-);
-sub _build_transform { shift; return sub { @_ } }
 
 has 'filters' => (
 	is => 'ro',

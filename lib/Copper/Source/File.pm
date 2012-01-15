@@ -48,10 +48,7 @@ has 'trim' => (
 	default => sub { 'none' },
 );
 
-sub foobar { my $x = 7 }
 around 'trim' => sub {
-		foobar();
-
 	my $orig = shift;
 	my $self = shift;
 

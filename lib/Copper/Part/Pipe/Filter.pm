@@ -59,7 +59,6 @@ sub apply_to {
 	return map { $result->($_) } @_;
 }
 
-sub foobar { my $x = 7 }
 around 'BUILDARGS' => sub {
 	my $orig = shift;
 	my $self = shift;
@@ -73,7 +72,6 @@ around 'BUILDARGS' => sub {
 
 	if ( $args{policy} ) {
 		my $policy = $args{policy};
-		foobar();
 		my $legal_vals = join('|', _filter_policies());
 		my $msg = "'policy' must be single-key hashref (with key =~ $legal_vals), or string =~ $legal_vals";
 		
