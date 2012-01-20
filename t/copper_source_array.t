@@ -15,6 +15,7 @@ BEGIN {
 };
 
 lives_ok { new_obj() } "Can create a new Copper::Source::Array with default params";
+isa_ok( new_obj(), 'Copper::Source::Array' );
 
 # START - Add more tests here
 
