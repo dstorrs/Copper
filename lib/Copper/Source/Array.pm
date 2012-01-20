@@ -1,4 +1,5 @@
-package Copper;
+package Copper::Source::Array;
+
 
 use v5.10.1;
 use strict;
@@ -6,20 +7,51 @@ use warnings;
 
 our $VERSION = '0.01';
 
+
 use Moose;
-use Copper::Source;
-use Copper::Sink;
-use Copper::Pipe;
-use Copper::Source::Array;
+
+with 'Copper::Source';
+
+has '_vals' => (
+	traits => ['Array'],
+	is => 'rw',
+	isa => 'ArrayRef',
+	default => sub { [] },
+	handles => {
+		all_vals    => 'elements',
+		get_val     => 'get',
+		set_val     => 'set',
+		count_vals  => 'count',
+		has_vals    => 'count',
+		has_no_vals => 'is_empty',
+	},		
+);
+
+# around 'BUILDARGS' => sub {
+# 	my ($orig, $self, %args) = @_;
+
+	
+# 	$self->$orig( %args );
+# };
+
+sub next {
+	my $self = shift;
+
+	return 0;
+}
+
+sub multi {
+	my $self = shift;
+	return ;
+}
 
 1;
 
 __END__
 
-
 =head1 NAME
 
-Copper 
+Copper::Source
 
 =head1 VERSION
 
@@ -27,17 +59,31 @@ Version 0.01
 
 =cut
 
-our $VERSION = '0.01';
-
-
 =head1 SYNOPSIS
 
-Modules for loading, transforming, and emitting data.
+Generates an infinite string of integers, counting up.
 
-    use Copper;
+See the documentation of C<Copper::Source>, since this module was used
+as the example there.
 
-    my $foo = Copper->new();
-    ...
+=head1 METHODS
+
+=head2 default_multi
+
+'rw' attribute.  Defines how many values will be returned by 'multi'.
+
+=head2 next
+
+Returns the next value in the sequence.
+
+=head2 multi
+
+Return the next C<$self->default_multi> values from the sequence.
+
+=head2 multi_n(N)
+
+Return the next N values from the sequence.  So,
+$counter_1->multi_n(3) would return the next 3 values.
 
 =head1 AUTHOR
 
@@ -56,7 +102,7 @@ automatically be notified of progress on your bug as I make changes.
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Copper
+    perldoc Copper::Source
 
 
 You can also look for information at:
@@ -98,4 +144,4 @@ See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
-1; # End of Copper
+	1;							# End of Copper::Source
