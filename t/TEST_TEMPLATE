@@ -16,6 +16,7 @@ BEGIN {
 
 #    Don't forget to global-replace the 'XXX' from the template for the class name
 lives_ok { new_obj() }, "Can create a new XXX with default params";
+isa_ok( new_obj(), 'XXX' );
 
 # START - Add more tests here
 
