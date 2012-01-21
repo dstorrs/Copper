@@ -7,10 +7,17 @@ use warnings;
 our $VERSION = '0.01';
 
 use Moose;
-use Copper::Source;
-use Copper::Sink;
 use Copper::Pipe;
+
+use Copper::Part::Pipe::Filter;
+
+use Copper::Source;
 use Copper::Source::Array;
+use Copper::Source::Ints;
+
+use Copper::Sink;
+use Copper::Sink::Return;
+use Copper::Sink::STDOUT;
 
 1;
 
