@@ -67,7 +67,11 @@ as the example there.
 
 =head2 next
 
-Returns the next value in the sequence.
+Returns the next value in the sequence and advances the sequence.
+
+=head2 peek
+
+Returns the next value in the sequence without advancing.
 
 =head2 multi
 
