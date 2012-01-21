@@ -2,9 +2,11 @@ package Copper::Pipe;
 
 use strict;
 use warnings;
+use feature ':5.10';
 
 use Moose;
 
+#use Scalar::Util qw/reftype blessed/;
 use Scalar::Util qw/reftype/;
 use List::Util  qw/first/;
 
@@ -44,9 +46,10 @@ has 'sources' => (
 	required           => 1,
 	handles       => {
 		all_sources    => 'elements',
-		add_source     => 'push',
 		map_sources    => 'map',
 		source_count   => 'count',
+
+		_get_source    => 'get',
 	},
 );
 
@@ -71,7 +74,7 @@ has 'filters' => (
 
 around 'BUILDARGS' => sub {
 	my $orig    = shift;
-	my $self   = shift;
+	my $self    = shift;
 	my %args    = @_;
 
 	#    Allow either singular or plural
@@ -79,6 +82,8 @@ around 'BUILDARGS' => sub {
 	$args{sinks  } ||= $args{sink} || Copper::Sink::Return->new;
 	$args{filters} ||= $args{filter};
 
+	%args = $self->_desugar_params( %args );
+	
 	#    Autobox attributes
 	{
 		no warnings 'uninitialized';
@@ -87,10 +92,59 @@ around 'BUILDARGS' => sub {
 		}
 	}
 
-	@_ = %args;
-
-	return $self->$orig(@_);
+	return $self->$orig(%args);
 };
+
+###------------------------------------------------------------------------
+
+sub _desugar_params {
+	my $self = shift;
+	my %args = @_;
+
+
+	my $make_source = sub {
+		my ( $class, $params ) = %{$_[0]};
+		$class = "Copper::$_[1]::$class";
+		$class->new( %$params );
+	};
+
+	for my $term ( qw/sources sinks/ ) {
+		my $class = $term;
+		chop $class;  #  Txt-spk for "cutting shop class" :>
+		$class = ucfirst $class;
+		
+		given ( $args{$term}) {
+			when ( ref $_ eq 'HASH'  ) {
+				$args{$term} = [ $make_source->( $_, $class ) ];
+			}
+			when ( ref $_ eq 'ARRAY' ) {
+				$args{$term} = [ map { $make_source->( $_, $class ) } @$_ ];
+			}
+			default {
+				die "Invalid args for '$term'; must be either a hashref or an arrayref of hashrefs";
+			}
+		}
+	}
+
+# 	given ( $args{logger} ) {
+# 		when ( blessed $_       ) { }  # All good, do nothing
+# 		when ( ref $_ eq 'HASH' ) {
+# 			my ($name, $watch, $conf_filepath) = map { $args{$_} } qw/name watch conf_filepath/;
+			
+# 			my $init_func = 'Log::Log4perl::' . $watch ? 'init_and_watch' : 'init';
+# 			{
+# 				no warnings;
+# 				$init_func->($conf_filepath);
+# 			}
+# 			$args{logger} = Log::Log4Perl->get_logger( $name );
+# 		}
+# 		default {
+# 			die "Invalid arg in 'logger'; must be either a Log::Log4perl object or a hashref.  Got: $args{logger}";
+# 		}
+# 	}
+	
+	return %args;
+}
 
 __PACKAGE__->meta->make_immutable;
 
