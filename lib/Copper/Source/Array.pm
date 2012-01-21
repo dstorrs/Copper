@@ -11,7 +11,6 @@ our $VERSION = '0.01';
 use Moose;
 
 with 'Copper::Source';
-
 use Copper::Source::Ints;
 
 has '_curr_index' => (
@@ -39,9 +38,14 @@ around 'BUILDARGS' => sub {
  	my ($orig, $self, %args) = @_;
 
 	die "No 'init' arg to Copper::Source::Array" unless $args{ init };
-	die "'init' arg to Copper::Source::Array must be arrayref" unless ref $args{ init } && ref $args{ init } eq 'ARRAY';
+	die "'init' arg to Copper::Source::Array must be arrayref or coderef"
+		unless ref $args{ init } && ref( $args{ init } ) =~ /^(ARRAY|CODE)$/;
 
-	$args{ _vals } = $args{ init };
+	given ( ref $args{ init } ) {
+		when ('ARRAY') {  $args{ _vals } = $args{ init }      }
+		when ('CODE')  {  $args{ _vals } = $args{ init }->()  }
+		default        {  die "Sanity check failed!"          } 
+	}
 	
  	$self->$orig( %args );
 };
