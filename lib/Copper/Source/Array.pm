@@ -12,34 +12,50 @@ use Moose;
 
 with 'Copper::Source';
 
+use Copper::Source::Ints;
+
+has '_curr_index' => (
+	is => 'ro',
+	isa => 'Copper::Source::Ints',
+	default => sub { Copper::Source::Ints->new() }
+);
+
 has '_vals' => (
 	traits => ['Array'],
 	is => 'rw',
 	isa => 'ArrayRef',
 	default => sub { [] },
 	handles => {
-		all_vals    => 'elements',
-		get_val     => 'get',
-		set_val     => 'set',
-		count_vals  => 'count',
-		has_vals    => 'count',
-		has_no_vals => 'is_empty',
+		_all_vals    => 'elements',
+		_get_val     => 'get',
+		_set_val     => 'set',
+		_count_vals  => 'count',
+		_has_vals    => 'count',
+		_has_no_vals => 'is_empty',
 	},		
 );
 
-# around 'BUILDARGS' => sub {
-# 	my ($orig, $self, %args) = @_;
+around 'BUILDARGS' => sub {
+ 	my ($orig, $self, %args) = @_;
 
+	die "No 'init' arg to Copper::Source::Array" unless $args{ init };
+	die "'init' arg to Copper::Source::Array must be arrayref" unless ref $args{ init } && ref $args{ init } eq 'ARRAY';
+
+	$args{ _vals } = $args{ init };
 	
-# 	$self->$orig( %args );
-# };
+ 	$self->$orig( %args );
+};
 
 sub next {
 	my $self = shift;
-
-	return 0;
+	return $self->_get_val( $self->_curr_index->next );
 }
 
+after 'next' => sub {
+	my $self = shift;
+	$self->_curr_index->reset_next_num		if $self->_curr_index->peek >= $self->_count_vals;
+};
+	
 sub multi {
 	my $self = shift;
 	return ;
