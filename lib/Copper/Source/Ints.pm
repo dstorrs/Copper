@@ -26,7 +26,7 @@ has 'next_num' => (
 
 sub next {
 	my $self = shift;
-	my $val = $self->next_num;
+	my $val = $self->peek();
 	$self->inc_next_num;
 	return $val;
 }
@@ -35,6 +35,8 @@ sub multi  {
 	my $self = shift;
 	$self->multi_n( $self->default_multi, @_ );
 }
+
+sub peek {	shift->next_num;  }
 
 1;
 

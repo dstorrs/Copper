@@ -22,6 +22,9 @@ test "default source::int counts up from 0 by ones" => sub {
 	}
 };
 
+is( $ints->peek, 10, "ints->peek is 10" );
+is( $ints->next, 10, "ints->next is 10" );
+
 is_deeply( [ new_ints()->multi ], [ 0..99 ], "default source::int 'multi'" );
 is_deeply( [ new_ints()->multi_n(7) ], [ 0..6 ], "default source::int->multi_n(7) returns 0..6" );
 
