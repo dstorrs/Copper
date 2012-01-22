@@ -62,6 +62,8 @@ has 'sinks' => (
 		add_sink       => 'push',
 		map_sinks      => 'map',
 		sink_count     => 'count',
+
+		_get_sink      => 'get',
 	},
 );
 

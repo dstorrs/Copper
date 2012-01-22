@@ -24,6 +24,12 @@ test "source expands" => sub {
 	is( $pipe->_get_source(0)->next, 'c', "third  entry in array is 'c'" );
 };
 
+test "sink expands" => sub {
+	my $pipe = new_pipe( sink => { Return => {} } );
+	isa_ok( $pipe, 'Copper::Pipe');
+	isa_ok( $pipe->_get_sink(0), 'Copper::Sink::Return');
+};
+
 done_testing();
 
 sub new_pipe {
