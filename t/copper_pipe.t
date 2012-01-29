@@ -29,7 +29,7 @@ test "Basic checks - does not throw under normal circumstances" => sub {
 
 test "Results from Sink::Return are correct" => sub {
 	my $squared = new_pipe(
-		sink        => Copper::Sink::Return->new( transform   => \&square ),
+		sink        => { Return => { transform   => \&square } },
 	);
 	#
 	#   Need to use 'is_deeply' here because 'is' would force scalar context
@@ -42,15 +42,15 @@ test "Results from Sink::Return are correct" => sub {
 
 test "Output from Sink::STDOUT is correct" => sub {
 	stdout_is(
-		sub { new_pipe( sink => Copper::Sink::STDOUT->new)->next() },
+		sub { new_pipe( sink => { STDOUT => {} })->next() },
 		"0",
 		"piping Source::Ints through Identity transform to Sink::STDOUT works"
 	);
 	stdout_is(
 		sub {
 			new_pipe(
-				sink => Copper::Sink::STDOUT->new,
-				source => Copper::Source::Ints->new(next_num => 7)
+				sink => { STDOUT => {} },
+				source => { Ints => { next_num => 7 } },
 			)->next()
 		},
 		"7",
@@ -64,8 +64,8 @@ test "Results from Sink::File are correct" => sub {
 	unlink $test_file;
 	ok( ! -e $test_file, "$test_file does not exist before tests" );
 	my $multi_squared = Copper::Pipe->new(
-		sources => [ Copper::Source::Ints->new( next_num => 7 ), Copper::Source::Ints->new( next_num => 2 ) ],
-		sinks   => [ Copper::Sink::File->new(filepath => $test_file), Copper::Sink::Return->new(transform => \&square) ],
+		sources => [ { Ints => { next_num => 7 } }, { Ints => { next_num => 2 } }  ],
+		sinks   => [ { File => { filepath => $test_file } }, { Return => { transform => \&square } } ],
 	);
 	is_deeply( [ $multi_squared->next() ], [49, 4], "multi_squared->next returns correct values on next() #1");
 	is_deeply( [ $multi_squared->next() ], [64, 9], "multi_squared->next returns correct values on next() #2");
@@ -82,7 +82,7 @@ test "Results from Sink::File are correct" => sub {
 
 sub new_pipe {
 	Copper::Pipe->new(
-		source => Copper::Source::Ints->new,
+		source => { Ints => {} },
 		@_,
 	);
 }

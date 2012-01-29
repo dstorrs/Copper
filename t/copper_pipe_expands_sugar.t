@@ -14,6 +14,37 @@ BEGIN {
 	use_ok 'Copper';
 };
 
+test "blessed sinks / sources are accepted" => sub {
+	lives_ok {
+		Copper::Pipe->new(
+			source => Copper::Source::Ints->new,
+			sink   => Copper::Sink::Return->new,
+		),
+	} "blessed source and sink, solo";
+	
+	lives_ok {
+		Copper::Pipe->new(
+			source => [ Copper::Source::Ints->new ], 
+			sink   => [ Copper::Sink::Return->new ], 
+		),
+	} "blessed source and sink, array";
+
+	lives_ok {
+		Copper::Pipe->new(
+			sources => [ Copper::Source::Ints->new ], 
+			sinks   => [ Copper::Sink::Return->new ], 
+		),
+	} "blessed sourceS and sinkS, array";
+
+	lives_ok {
+		Copper::Pipe->new(
+			sources => Copper::Source::Ints->new, 
+			sinks   => Copper::Sink::Return->new, 
+		),
+	} "blessed sourceS and sinkS, array";
+};
+
+
 test "source expands" => sub {
 	my $pipe = new_pipe( source => { Array => { init => sub { [ qw/a b c/ ] } } } );
 

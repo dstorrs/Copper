@@ -1,37 +1,29 @@
-package Copper::Sink;
-
-use v5.10.1;
-use strict;
-use warnings;
-
-our $VERSION = '0.01';
+package Copper::Role::HasHooks;
 
 use Moose::Role;
 
-#with ( map { "Copper::Role::$_" } qw/Named HasTransform/ );
-with ( "Copper::Role::Named", "Copper::Role::HasTransform", "Copper::Role::HasHooks" );
+has 'pre_hook' => (
+	is => 'ro',
+	isa => 'Maybe[CodeRef]',
+	predicate => 'has_pre_hook',
+);
 
-requires 'drain';
+has 'post_hook' => (
+	is => 'ro',
+	isa => 'Maybe[CodeRef]',
+	predicate => 'has_post_hook',
+);
 
-around 'drain' => sub {
-	my ($orig, $self, @vals) = @_;
+sub apply_pre_hook {
+	my $self = shift;
+	return @_ unless $self->has_pre_hook;
+	$self->pre_hook->(@_);
+}
 
-	$self->$orig(
-		map {
-			$self->apply_post_hook(
-				$self->transform->(
-					$self,
-					$self->apply_pre_hook( $_ )
-				)
-			)
-		} @vals
-	);
-};
-	
-sub finalize {}  # Can be used to flush filehandles, etc
-
-sub DEMOLISH {
-	shift->finalize;
+sub apply_post_hook {
+	my $self = shift;
+	return @_ unless $self->has_post_hook;
+	$self->post_hook->(@_);
 }
 
 1;
@@ -40,7 +32,7 @@ __END__
 
 =head1 NAME
 
-Copper::Sink
+Copper::Role::HasHooks
 
 =head1 VERSION
 
@@ -51,23 +43,30 @@ Version 0.01
 
 =head1 SYNOPSIS
 
-Copper::Sink is a Role which classes inherit from.  Such classes take
-in values and send them somewhere else -- a disk file, a database,
-STDOUT, etc.  See the specific classes for examples.
+Copper::Role::HasHooks 
 
 =head1 METHODS
 
-=head2 drain
+=head2 pre_hook
 
-Takes an array of values, sends them on.
+Optional coderef Attribute.  That ref will be passed two values:
+$self, and the $val to be manipulated.
 
-=head2 finalize
+=head2 post_hook
 
-C<::Sink>s may redefine this to, e.g., flush output handles.
+Optional coderef Attribute.  That ref will be passed two values:
+$self, and the $val to be manipulated.
 
-=head2 DEMOLISH
+=head2 apply_pre_hook
 
-Calls $self->finalize.
+Optional coderef Attribute.  That ref will be passed two values:
+$self, and the $val to be manipulated.
+
+=head2 apply_post_hook
+
+Optional coderef Attribute.  That ref will be passed two values:
+$self, and the $val to be manipulated.
+
 
 =head1 AUTHOR
 
@@ -86,7 +85,7 @@ automatically be notified of progress on your bug as I make changes.
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Copper::Sink
+    perldoc Copper::Role::HasTransform
 
 
 You can also look for information at:
@@ -127,5 +126,3 @@ See http://dev.perl.org/licenses/ for more information.
 
 
 =cut
-
-1; # End of Copper::Sink

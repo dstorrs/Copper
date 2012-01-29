@@ -6,8 +6,7 @@ use feature ':5.10';
 
 use Moose;
 
-#use Scalar::Util qw/reftype blessed/;
-use Scalar::Util qw/reftype/;
+use Scalar::Util qw/blessed reftype looks_like_number/;
 use List::Util  qw/first/;
 
 use Copper::Part::Pipe::Filter;
@@ -81,11 +80,9 @@ around 'BUILDARGS' => sub {
 
 	#    Allow either singular or plural
 	$args{sources} ||= $args{source};
-	$args{sinks  } ||= $args{sink} || Copper::Sink::Return->new;
+	$args{sinks  } ||= $args{sink} || { Return => {} };
 	$args{filters} ||= $args{filter};
 
-	%args = $self->_desugar_params( %args );
-	
 	#    Autobox attributes
 	{
 		no warnings 'uninitialized';
@@ -94,6 +91,8 @@ around 'BUILDARGS' => sub {
 		}
 	}
 
+	%args = $self->_desugar_params( %args );
+	
 	return $self->$orig(%args);
 };
 
@@ -104,29 +103,37 @@ sub _desugar_params {
 	my %args = @_;
 
 
-	my $make_source = sub {
-		my ( $class, $params ) = %{$_[0]};
-		$class = "Copper::$_[1]::$class";
+	my $make_obj = sub {
+		my ($hashref, $type) = @_;
+		return $hashref if blessed $hashref;
+		
+		die "$hashref is not a hashref" unless reftype $hashref eq 'HASH';
+		my ( $class, $params ) = %$hashref;
+		$class =~ s/^Copper::(?:Source|Sink):://; # If it was there, cope
+		$class = "Copper::${type}::$class";       # If it wasn't, add it
 		$class->new( %$params );
 	};
 
 	for my $term ( qw/sources sinks/ ) {
 		my $class = $term;
-		chop $class;  #  Txt-spk for "cutting shop class" :>
+		chop $class;  #  "chop class" == txt-spk for "Cut sHOP class" :>
 		$class = ucfirst $class;
 		
-		given ( $args{$term}) {
+ 		given ( $args{$term}) {
+			when ( blessed $_ ) {
+				$args{$term} =  [ $_ ];
+			}
 			when ( ref $_ eq 'HASH'  ) {
-				$args{$term} = [ $make_source->( $_, $class ) ];
+				$args{$term} = [ $make_obj->( $_, $class ) ];
 			}
 			when ( ref $_ eq 'ARRAY' ) {
-				$args{$term} = [ map { $make_source->( $_, $class ) } @$_ ];
+				$args{$term} = [ map { $make_obj->( $_, $class ) } @$_ ];
 			}
 			default {
 				die "Invalid args for '$term'; must be either a hashref or an arrayref of hashrefs";
 			}
-		}
-	}
+ 		}
+ 	}
 
 # 	given ( $args{logger} ) {
 # 		when ( blessed $_       ) { }  # All good, do nothing

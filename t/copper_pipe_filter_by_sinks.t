@@ -39,8 +39,8 @@ sub new_pipe {
 	
 	$args{sources} ||= [ 2, 10 ];
 	$args{sinks  } ||= [
-		Copper::Sink::Return->new(	name => 'first'	 , transform => $trans ),
-		Copper::Sink::Return->new(	name => 'second' , transform => $trans ),
+		{ Return => {	name => 'first'	 , transform => $trans } },
+		{ Return => {	name => 'second' , transform => $trans } },
 	];
 	
 	Copper::Pipe->new(
