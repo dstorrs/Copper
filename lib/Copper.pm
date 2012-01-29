@@ -18,6 +18,7 @@ use Copper::Source::Ints;
 use Copper::Sink;
 use Copper::Sink::Return;
 use Copper::Sink::STDOUT;
+use Copper::Sink::CodeRef;
 
 1;
 
