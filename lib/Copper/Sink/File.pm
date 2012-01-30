@@ -11,20 +11,27 @@ use IO::File;
 with 'Copper::Sink'; 
 
 has 'filepath' => (
-	is => 'ro',
-	isa => 'Str',
+	is => 'rw',
+	isa => 'Str|CodeRef',
 	required => 1,
 );
 
 has '_fh' => (
 	is => 'ro',
+	writer => '_set_fh',
 	isa => 'IO::File',
 	lazy_build => 1,
 );
 sub _build__fh {
 	my $self = shift;
-	my $fh = IO::File->new($self->filepath, ">:encoding(utf8)")
-		or die "Could not open '" . $self->filepath . "': $!";
+	my $val  = shift // '';
+	
+	my $filepath = $self->filepath;
+	$filepath = $filepath->( $val ) if ref $filepath;
+	
+	my $fh = IO::File->new($filepath, ">:encoding(utf8)")
+		or die "Could not open '" . $filepath . "': $!";
+	
 	return $fh;
 }
 
@@ -34,17 +41,28 @@ has 'format' => (
 	predicate => 'has_format',
 	required => 0,
 );
+
 sub _print {
 	my $self = shift;
-	my $fh = $self->_fh;
-	print $fh @_;
+
+	my $is_ref = ref $self->filepath;
+
+	my $fh; 
+	for ( @_ ) {
+		$fh = $self->_set_fh( $self->_build__fh($_) )     if ! $fh;
+		print $fh $_;
+		if ( $is_ref ) {
+			$fh->flush;
+			undef $fh;
+		}  
+	}
 }
 
 sub drain {
 	my $self = shift;
 
 	if ( $self->has_format ) {
-		$self->_print( $self->format->( @_ ) );   
+		$self->_print( $self->format->( @_ ) );
 	}
 	else {		
 		$self->_print( @_ );   
