@@ -1,4 +1,4 @@
-package Copper;
+package Copper::Source::LWP::UserAgent;
 
 use v5.10.1;
 use strict;
@@ -7,28 +7,38 @@ use warnings;
 our $VERSION = '0.01';
 
 use Moose;
-use Copper::Pipe;
+use LWP::UserAgent;
 
-use Copper::Part::Pipe::Filter;
+with 'Copper::Source';
 
-use Copper::Source;
-use Copper::Source::Array;
-use Copper::Source::Ints;
-use Copper::Source::LWP::UserAgent;
+has 'url' => (
+	is => 'rw',
+	isa => 'Str',
+);
 
-use Copper::Sink;
-use Copper::Sink::File;
-use Copper::Sink::Return;
-use Copper::Sink::STDOUT;
+has '_ua' => (
+	is => 'ro',
+	isa => 'LWP::UserAgent',
+	lazy_build => 1,
+);
+sub _build__ua { LWP::UserAgent->new }
+
+sub next {
+	my $self = shift;
+	
+	$self->_ua->get( $self->url );
+}
+
+sub multi    { shift-> next }
+sub multi_n  { shift-> next }
 
 1;
 
 __END__
 
-
 =head1 NAME
 
-Copper 
+Copper::Source
 
 =head1 VERSION
 
@@ -36,17 +46,35 @@ Version 0.01
 
 =cut
 
-our $VERSION = '0.01';
-
-
 =head1 SYNOPSIS
 
-Modules for loading, transforming, and emitting data.
+Generates an infinite string of integers, counting up.
 
-    use Copper;
+See the documentation of C<Copper::Source>, since this module was used
+as the example there.
 
-    my $foo = Copper->new();
-    ...
+=head1 METHODS
+
+=head2 default_multi
+
+'rw' attribute.  Defines how many values will be returned by 'multi'.
+
+=head2 next
+
+Returns the next value in the sequence and advances the sequence.
+
+=head2 peek
+
+Returns the next value in the sequence without advancing.
+
+=head2 multi
+
+Return the next C<$self->default_multi> values from the sequence.
+
+=head2 multi_n(N)
+
+Return the next N values from the sequence.  So,
+$counter_1->multi_n(3) would return the next 3 values.
 
 =head1 AUTHOR
 
@@ -65,7 +93,7 @@ automatically be notified of progress on your bug as I make changes.
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Copper
+    perldoc Copper::Source
 
 
 You can also look for information at:
@@ -107,4 +135,4 @@ See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
-1; # End of Copper
+	1;							# End of Copper::Source
