@@ -7,7 +7,7 @@ use warnings;
 
 use Moose::Role;
 
-with 'Copper::Role::Named';
+with ('Copper::Role::Named', 'Copper::Role::HasHooks', 'Copper::Role::HasTransform');
 
 our $VERSION = '0.01';
 
@@ -17,6 +17,16 @@ requires 'multi';
 
 has 'default_multi' => ( is => 'rw', isa => 'Int', lazy => 1, builder => '_build_default_multi' );
 sub _build_default_multi { 100 }
+
+around 'next' => sub {
+	my ($orig, $self, @vals) = @_;
+
+	$self->apply_pre_hook(  @vals );
+	my @result = $self->$orig( @vals );
+	@result = $self->apply_transform( @result );
+	$self->apply_post_hook( @vals );
+	return @result;
+};
 
 sub multi_n  {
 	my $self = shift;
@@ -101,6 +111,24 @@ Should return all values left in the sequence or, if that is not
 possible, the number of values specified by C<default_multi>.
 
 =cut
+
+=head2 pre_hook, post_hook, transform
+
+These optional attributes each take a coderef and run it at various
+times in the processing cycle.  Each coderef will be passed two
+arguments -- $self, and the value that is currently being processed.
+C<pre_hook> receives the values before they are sent to C<next> /
+C<multi> / C<multi_n>.  C<post_hook> receives the values afterwards.
+Both of the '*_hook' refs are called in isolation and are intended to
+be used for their side effects; their return value is ignored.
+C<transform>, on the other hand, will actually modify the value that
+is returned from the source, meaning that the sinks will receive a
+different value than was originally sent.
+
+Note that these are similar to, but distinct from, Moose method
+modifiers and it is possible to use these in conjunction with Moose's
+C<before>, C<after>, and C<around> modifiers.  These hooks are
+intended to make it easy to provide modifiers for a single object.
 
 
 =head1 AUTHOR

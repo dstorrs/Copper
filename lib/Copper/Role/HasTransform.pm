@@ -4,10 +4,15 @@ use Moose::Role;
 
 has 'transform' => (
 	is => 'ro',
-	isa => 'CodeRef',
-	lazy_build => 1,
+	isa => 'Maybe[CodeRef]',
+	predicate => 'has_transform',
 );
-sub _build_transform { sub { shift; @_ } }
+
+sub apply_transform {
+	my $self = shift;
+	return $self->transform->($self, @_) if $self->has_transform;
+	return @_;
+}
 
 1;
 

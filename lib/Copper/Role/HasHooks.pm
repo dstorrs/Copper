@@ -17,13 +17,13 @@ has 'post_hook' => (
 sub apply_pre_hook {
 	my $self = shift;
 	return @_ unless $self->has_pre_hook;
-	$self->pre_hook->(@_);
+	$self->pre_hook->($self, @_);
 }
 
 sub apply_post_hook {
 	my $self = shift;
 	return @_ unless $self->has_post_hook;
-	$self->post_hook->(@_);
+	$self->post_hook->($self, @_);
 }
 
 1;

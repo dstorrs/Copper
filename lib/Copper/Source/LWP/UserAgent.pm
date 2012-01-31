@@ -13,7 +13,7 @@ with 'Copper::Source';
 
 has 'url' => (
 	is => 'rw',
-	isa => 'Str',
+	isa => 'Str|CodeRef',
 );
 
 has '_ua' => (
@@ -25,12 +25,16 @@ sub _build__ua { LWP::UserAgent->new }
 
 sub next {
 	my $self = shift;
+
+	my $url = $self->url;
+	$url = $url->( $self, @_ ) if ref $url;
 	
-	$self->_ua->get( $self->url );
+	my (@res) =	$self->_ua->get( $url );
+	return wantarray ? @res : $res[0];
 }
 
-sub multi    { shift-> next }
-sub multi_n  { shift-> next }
+sub multi    { shift->next }
+sub multi_n  { shift->next }
 
 1;
 
