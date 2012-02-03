@@ -9,6 +9,8 @@ use Test::Exception;
 use Test::Group;
 use Data::Dumper;
 
+use lib '../lib';
+
 BEGIN {
 	is(1, 1, 'testing framework is working');
 	use_ok 'Copper';  # Verify that it gets loaded from base module

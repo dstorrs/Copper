@@ -8,8 +8,8 @@ our $VERSION = '0.01';
 
 use Moose::Role;
 
-#with ( map { "Copper::Role::$_" } qw/Named HasTransform/ );
-with ( "Copper::Role::Named", "Copper::Role::HasTransform", "Copper::Role::HasHooks" );
+with ( map { "Copper::Role::$_" } qw/Named HasTransform HasHooks/ );
+
 
 requires 'drain';
 
@@ -18,12 +18,10 @@ around 'drain' => sub {
 
 	$self->$orig(
 		map {
-			$self->apply_post_hook(
-				$self->transform->(
-					$self,
-					$self->apply_pre_hook( $_ )
-				)
-			)
+			$self->apply_pre_hook( $_ );
+			my @res = $self->apply_transform( $_ );
+			$self->apply_post_hook( $_ );
+			@res;
 		} @vals
 	);
 };

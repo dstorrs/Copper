@@ -16,6 +16,19 @@ has 'filepath' => (
 	required => 1,
 );
 
+has 'mode' => (
+	is => 'ro',
+	isa => 'Str',
+	lazy_build => 1,
+);
+sub _build_mode {
+	my $self = shift;
+	my $filepath = $self->filepath;
+	return '>>' if ref $filepath;
+	return '>';
+}
+	
+
 has '_fh' => (
 	is => 'ro',
 	writer => '_set_fh',
@@ -28,11 +41,32 @@ sub _build__fh {
 	
 	my $filepath = $self->filepath;
 	$filepath = $filepath->( $val ) if ref $filepath;
-	
-	my $fh = IO::File->new($filepath, ">:encoding(utf8)")
+
+	my $mode = $self->mode;
+	my $fh = IO::File->new($filepath, "${mode}:encoding(utf8)")
 		or die "Could not open '" . $filepath . "': $!";
 	
 	return $fh;
+}
+sub _ensure_fh {
+	my $self = shift;
+	my $val  = shift;
+
+	my $is_ref = ref $self->filepath;
+
+	# filepath is ref && fh NOT set  => rebuild fh 
+	# filepath is ref && fh is set   => rebuild fh
+	# filepath is NOT ref && fh NOT set rebuild fh
+	# filepath is NOT ref && fh is set => do not rebuild
+
+	if ( !($is_ref) && $self->_fh ) {
+		#    Do nothing
+	}
+	else {
+		$self->_set_fh( $self->_build__fh( $val ) );
+	}
+
+	return $self->_fh;
 }
 
 has 'format' => (
@@ -46,15 +80,14 @@ sub _print {
 	my $self = shift;
 
 	my $is_ref = ref $self->filepath;
-
-	my $fh; 
+	
+	my $fh;
 	for ( @_ ) {
-		$fh = $self->_set_fh( $self->_build__fh($_) )     if ! $fh;
+		$fh = $self->_ensure_fh( $_ );
+		
 		print $fh $_;
-		if ( $is_ref ) {
-			$fh->flush;
-			undef $fh;
-		}  
+		
+		$fh->flush if $is_ref;
 	}
 }
 

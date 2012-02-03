@@ -2,15 +2,16 @@ package Copper::Role::HasTransform;
 
 use Moose::Role;
 
-has 'transform' => (
+has '_transform' => (
 	is => 'ro',
 	isa => 'Maybe[CodeRef]',
 	predicate => 'has_transform',
+	init_arg => 'transform',
 );
 
 sub apply_transform {
 	my $self = shift;
-	return $self->transform->($self, @_) if $self->has_transform;
+	return $self->_transform->($self, @_) if $self->has_transform;
 	return @_;
 }
 

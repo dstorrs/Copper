@@ -25,7 +25,7 @@ around 'next' => sub {
 	my @result = $self->$orig( @vals );
 	@result = $self->apply_transform( @result );
 	$self->apply_post_hook( @vals );
-	return @result;
+	return wantarray ? @result : $result[0];
 };
 
 sub multi_n  {

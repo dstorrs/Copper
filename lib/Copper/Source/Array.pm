@@ -52,14 +52,15 @@ around 'BUILDARGS' => sub {
 
 sub next {
 	my $self = shift;
-	return $self->_get_val( $self->_curr_index->next );
+	my @res = $self->_get_val( $self->_curr_index->next );
+	return wantarray ? @res : $res[0];
 }
 
 after 'next' => sub {
 	my $self = shift;
 	$self->_curr_index->reset_next_num		if $self->_curr_index->peek >= $self->_count_vals;
 };
-	
+
 sub multi {
 	my $self = shift;
 	return ;
@@ -164,4 +165,4 @@ See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
-	1;							# End of Copper::Source
+1;							# End of Copper::Source
