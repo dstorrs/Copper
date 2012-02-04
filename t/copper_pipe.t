@@ -77,6 +77,12 @@ test "Results from Sink::File are correct" => sub {
 	is( read_file($test_file), "728394105", "Test file contents are as expected" );
 };
 
+test "Pipes with transforms work" => sub {
+	my $pipe = new_pipe( source => { Ints => { next_num => 2 } }, sink => { Return => {} }, transform => sub { shift; ++$_[0] } );
+	is_deeply( [ $pipe->next ], [ 3 ], "transform works" );
+	is_deeply( [ $pipe->next ], [ 4 ], "transform works" );
+	is_deeply( [ $pipe->next ], [ 5 ], "transform works" );
+};
 
 ###----------------------------------------------------------------
 

@@ -9,12 +9,9 @@ use Moose;
 use Scalar::Util qw/blessed reftype looks_like_number/;
 use List::Util  qw/first/;
 
-use Copper::Part::Pipe::Filter;
-use Copper::Types;
-use Copper::Source;
-use Copper::Source::File;
-use Copper::Sink::Return;
-use Copper::Sink::STDOUT;
+use Copper;
+
+with 'Copper::Role::HasTransform';
 
 our $VERSION = '0.01';
 
@@ -26,8 +23,8 @@ sub next {
 	my $self = shift;
 
 	my @results;
-	my @data = map { $_->next } $self->all_sources;
-	for my $sink ( $self->all_sinks ) {
+	my @data = map { $self->apply_transform($_) } map { $_->next } $self->all_sources;
+	for my $sink ( $self->all_sinks ) {		
 		push @results, $sink->drain( @data );
 	}
 	
