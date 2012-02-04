@@ -44,7 +44,7 @@ __END__
 
 =head1 NAME
 
-Copper::Source
+Copper::Source::Ints
 
 =head1 VERSION
 
