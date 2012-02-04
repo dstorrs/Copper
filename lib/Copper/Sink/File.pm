@@ -115,6 +115,14 @@ sub DEMOLISH {
 	$self->finalize;
 }
 
+before 'apply_transform' => sub {
+	my $self = shift;
+
+	if ( $self->has_transform ) {
+		$self->_ensure_fh( @_ );
+	}
+};
+
 1;
 
 __END__
