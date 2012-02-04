@@ -14,12 +14,15 @@ use Copper::Part::Pipe::Filter;
 use Copper::Source;
 use Copper::Source::Array;
 use Copper::Source::Ints;
+use Copper::Source::File;
 use Copper::Source::LWP::UserAgent;
 
 use Copper::Sink;
 use Copper::Sink::File;
 use Copper::Sink::Return;
 use Copper::Sink::STDOUT;
+
+use Copper::Types;
 
 1;
 
