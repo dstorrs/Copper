@@ -25,7 +25,18 @@ around 'drain' => sub {
 		} @vals
 	);
 };
-	
+
+has 'init' => (
+	is => 'ro',
+	isa => 'Maybe[CodeRef]',
+	predicate => 'has_init',
+);
+
+sub apply_init {
+	my $self = $_[0];
+	$self->init->( @_ ) if $self->has_init;
+} 
+
 sub finalize {}  # Can be used to flush filehandles, etc
 
 sub DEMOLISH {

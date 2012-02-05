@@ -8,7 +8,7 @@ use feature ':5.10';
 use Moose;
 use IO::File;
 
-with 'Copper::Sink'; 
+with 'Copper::Sink', 'Copper::Role::HasTransform'; 
 
 has 'filepath' => (
 	is => 'rw',
@@ -40,7 +40,7 @@ sub _build__fh {
 	my $val  = shift // '';
 	
 	my $filepath = $self->filepath;
-	$filepath = $filepath->( $val ) if ref $filepath;
+	$filepath = $filepath->( $self, $val ) if ref $filepath;
 
 	my $mode = $self->mode;
 	my $fh = IO::File->new($filepath, "${mode}:encoding(utf8)")
@@ -48,7 +48,8 @@ sub _build__fh {
 	
 	return $fh;
 }
-sub _ensure_fh {
+
+sub ensure_fh {
 	my $self = shift;
 	my $val  = shift;
 
@@ -81,25 +82,27 @@ sub _print {
 
 	my $is_ref = ref $self->filepath;
 	
-	my $fh;
+	my $fh = $self->_fh;
 	for ( @_ ) {
-		$fh = $self->_ensure_fh( $_ );
-		
 		print $fh $_;
-		
-		$fh->flush if $is_ref;
 	}
 }
 
 sub drain {
 	my $self = shift;
+	my @rest = @_;
+	
+	if ( $self->has_init ) {
+		#    Do nothing -- init is assumed to have set up the filehandle
+	}
+	else {
+		$self->ensure_fh(@rest);
+	}
 
-	if ( $self->has_format ) {
-		$self->_print( $self->format->( @_ ) );
-	}
-	else {		
-		$self->_print( @_ );   
-	}
+	@rest = $self->format->( @rest ) if $self->has_format;
+	$self->_print( @rest );
+
+	if ( ref $self->filepath ) { $self->_clear_fh };
 	
 	return;
 }
@@ -119,7 +122,8 @@ before 'apply_transform' => sub {
 	my $self = shift;
 
 	if ( $self->has_transform ) {
-		$self->_ensure_fh( @_ );
+		say "In File::apply_transform, about to call ensure_fh";		
+		$self->ensure_fh( @_ );
 	}
 };
 

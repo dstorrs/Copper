@@ -8,10 +8,11 @@ use Moose;
 
 use Scalar::Util qw/blessed reftype looks_like_number/;
 use List::Util  qw/first/;
+use Data::Dumper;
 
 use Copper;
 
-with 'Copper::Role::HasTransform';
+with ('Copper::Role::HasTransform', 'Copper::Role::HasHooks');
 
 our $VERSION = '0.01';
 
@@ -20,12 +21,29 @@ our @CARP_NOT = ('Moose::Object', 'Class::MOP::Method');
 
 
 sub next {
+	say "in Pipe::next, args: @_";
+	
 	my $self = shift;
 
-	my @results;
-	my @data = map { $self->apply_transform($_) } map { $_->next } $self->all_sources;
-	for my $sink ( $self->all_sinks ) {		
+	say "in Pipe::next, has_pre_hook: ", $self->has_pre_hook;
+	say "in Pipe::next, has_post_hook: ", $self->has_post_hook;
+	
+	my ( @results, @data );
+
+	@data = map { $_->next } $self->all_sources;
+
+	if ( $self->pre_init_sinks ) {
+		for my $sink ( $self->all_sinks ) {
+			$sink->apply_init( $self, @data );
+		}
+	}
+
+	@data = map { $self->apply_transform($_) } @data;
+	
+	for my $sink ( $self->all_sinks ) {
+		say "in Pipe::next, before running drain.  current sink is: $sink, data is @data";
 		push @results, $sink->drain( @data );
+		say "in Pipe::next, after running drain.  sink was: $sink, result is @results";
 	}
 	
 	return @results;
@@ -61,6 +79,12 @@ has 'sinks' => (
 
 		_get_sink      => 'get',
 	},
+);
+
+has 'pre_init_sinks' => (
+	is => 'ro',
+	isa => 'Bool',
+	default => 0,
 );
 
 has 'filters' => (
