@@ -29,14 +29,14 @@ test "can download a file to disk" => sub {
 	my @name = qw/lisanova nigahiga/;
 
 	my $make_path = sub {
-		say "in make_path. args are: @_";
+#		say "in make_path. args are: @_";
 		#cluck "in make_path. longmess:  \n";
 		
 		my ($self, $val) = @_;
 		$val =~ s/[ #]/_/g;
 		my $res = lc "/tmp/$val";
 
-		say "in make_path, final result is $res";
+#		say "in make_path, final result is $res";
 
 		return $res;
 	};
@@ -49,6 +49,8 @@ test "can download a file to disk" => sub {
 	my $pipe = Copper::Pipe->new(
 		source => { Array => { init => [ @name ] } },
 
+		pre_init_sinks => 1,
+		
 		sinks   => [
 			{
 				File => {
@@ -56,15 +58,19 @@ test "can download a file to disk" => sub {
 
 					init => sub {
 						my ($self, $pipe, @args) = @_;
-						say "IN FILE::init, args are: @_";
+#						say "IN FILE::init, self: $self, pipe: $pipe, args: @args";
 						$self->ensure_fh( @args );
+					},
+
+					transform => sub {
+#						say "In File::transform, args are: @_";
+						shift;
+						shift->decoded_content
 					},
 				},
 			},
 		],
 
-		pre_init_sinks => 1,
-		
 		transform => sub {
 			my ($self, $profile) = @_;
 
@@ -72,21 +78,21 @@ test "can download a file to disk" => sub {
 				url => 'placeholder',
 				pre_hook => sub {
 					my ($self, $val) = @_;
-					say "IN LWP::UA::transform, args are: @_";
+#					say "IN LWP::UA::transform, args are: @_";
 					$self->url( join('', "http://gdata.youtube.com/feeds/api/users/", $val) )
 				},
 			);
 
 			my $res = $ua->next($profile);
 
-			say "LWP::UA::transform returning $res";
+#			say "LWP::UA::transform returning $res";
 			
-			return $res->decoded_content;
+			return $res;
 		},
 	);
 
 	for ( @name ) {
-		say "in main. val is $_";
+#		say "in main. val is $_";
 		$pipe->next;
 		ok( -e $make_path->( $_ ), $make_path->( $_ ) . " exists" );
 	}

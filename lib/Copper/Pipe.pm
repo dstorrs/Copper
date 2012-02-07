@@ -21,30 +21,39 @@ our @CARP_NOT = ('Moose::Object', 'Class::MOP::Method');
 
 
 sub next {
-	say "in Pipe::next, args: @_";
+#	say "in Pipe::next, args: @_";
 	
 	my $self = shift;
 
-	say "in Pipe::next, has_pre_hook: ", $self->has_pre_hook;
-	say "in Pipe::next, has_post_hook: ", $self->has_post_hook;
+#	say "in Pipe::next, has_pre_hook: ", $self->has_pre_hook;
+#	say "in Pipe::next, has_post_hook: ", $self->has_post_hook;
 	
 	my ( @results, @data );
 
 	@data = map { $_->next } $self->all_sources;
 
+#	say "in Pipe::next, after all_source->next.  data is: @data";
+	
 	if ( $self->pre_init_sinks ) {
+#		say "in Pipe::next, has pre_init_sinks";
+		
 		for my $sink ( $self->all_sinks ) {
+#			say "in Pipe::next, initing $sink";
 			$sink->apply_init( $self, @data );
 		}
+#			say "in Pipe::next, inited all sinks";
 	}
+#			say "in Pipe::next, after pre_init_sinks.  data is @data";
 
 	@data = map { $self->apply_transform($_) } @data;
+#			say "in Pipe::next, after apply_transform.  data is @data";
 	
 	for my $sink ( $self->all_sinks ) {
-		say "in Pipe::next, before running drain.  current sink is: $sink, data is @data";
+#		say "in Pipe::next, before running drain.  current sink is: $sink, data is @data";
 		push @results, $sink->drain( @data );
-		say "in Pipe::next, after running drain.  sink was: $sink, result is @results";
+#		say "in Pipe::next, after running drain.  sink was: $sink, result is @results";
 	}
+#			say "in Pipe::next, exiting. results are @results";
 	
 	return @results;
 }
