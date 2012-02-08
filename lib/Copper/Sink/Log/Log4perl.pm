@@ -1,38 +1,60 @@
-package Copper;
+package Copper::Sink::Log::Log4perl;
 
 use v5.10.1;
 use strict;
 use warnings;
+use feature ':5.10';
 
-our $VERSION = '0.01';
+use FindBin qw/$Bin/;
+use Log::Log4perl;
+use File::Basename qw/fileparse/;
+use File::Spec;
 
 use Moose;
-use Copper::Pipe;
 
-use Copper::Part::Pipe::Filter;
+with 'Copper::Sink'; 
 
-use Copper::Source;
-use Copper::Source::Array;
-use Copper::Source::Ints;
-use Copper::Source::File;
-use Copper::Source::LWP::UserAgent;
+sub drain {
+	my $self = shift;
+	return @_;
+}
 
-use Copper::Sink;
-use Copper::Sink::File;
-use Copper::Sink::Return;
-use Copper::Sink::STDOUT;
-use Copper::Sink::Log::Log4perl;
+has 'config_filepath' => (
+	is => 'ro',
+	isa => 'Str',
+);
 
-use Copper::Types;
+sub log_filepath {	"$Bin/logfile.log" }
+
+has '_logger' => (
+	is => 'ro',
+	isa => 'Log::Log4perl::Logger',
+	lazy_build => 1,
+	handles => {
+		log_trace => 'trace',
+		log_debug => 'debug',
+		log_info => 'info',
+		log_warn => 'warn',
+		log_error => 'error',
+		log_fatal => 'fatal',
+	},
+);
+sub _build__logger {
+	my $self = shift;
+	
+	Log::Log4perl->init( $self->config_filepath );
+
+	my $logger = Log::Log4perl::get_logger("Foo::Bar");
+	return $logger;
+}
 
 1;
 
 __END__
 
-
 =head1 NAME
 
-Copper 
+Copper::Sink::Log::Log4perl
 
 =head1 VERSION
 
@@ -45,12 +67,17 @@ our $VERSION = '0.01';
 
 =head1 SYNOPSIS
 
-Modules for loading, transforming, and emitting data.
+@@TODO
 
-    use Copper;
+=head1 METHODS
 
-    my $foo = Copper->new();
-    ...
+=over 4
+
+=item drain
+
+@@TODO
+
+=back
 
 =head1 AUTHOR
 
@@ -69,7 +96,7 @@ automatically be notified of progress on your bug as I make changes.
 
 You can find documentation for this module with the perldoc command.
 
-    perldoc Copper
+    perldoc Copper::Sink::STDOUT
 
 
 You can also look for information at:
@@ -111,4 +138,4 @@ See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
-1; # End of Copper
+1; # End of Copper::Sink::STDOUT
