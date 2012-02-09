@@ -9,6 +9,12 @@ use Test::Exception;
 use Test::Group;
 use Data::Dumper;
 
+use FindBin qw/$Bin/;
+use lib "$Bin/../lib";
+
+use Copper::Sink::Return;
+use Copper::Source::Ints;
+
 BEGIN {
 	is(1, 1, 'testing framework is working');
 	use_ok 'Copper';
