@@ -37,13 +37,8 @@ has '_fh' => (
 	lazy_build => 1,
 );
 sub _build__fh {
-#	say "in File::_build__fh. args are @_";
-#	cluck "in File::_build__fh. call stack is: \n\n";
-
 	my $self = shift;
 	my $val  = shift // '';
-
-#	say "in File::_build__fh. val is $val";
 
 	my $filepath = $self->filepath;
 	$filepath = $filepath->( $self, $val ) if ref $filepath;
@@ -52,14 +47,10 @@ sub _build__fh {
 	my $fh = IO::File->new($filepath, "${mode}:encoding(utf8)")
 		or die "Could not open '" . $filepath . "': $!";
 
-#	say "in File::_build__fh. fh is $fh";
-
 	return $fh;
 }
 
 sub ensure_fh {
-#	say "In File::ensure_fh.  args are @_";
-
 	my $self = shift;
 	my $val  = shift;
 
@@ -72,12 +63,9 @@ sub ensure_fh {
 
 	if ( !($is_ref) && $self->_fh ) {
 		# Do nothing
-#		say "In File::ensure_fh, doing nothing";
 	}
 	else {
-#		say "In File::ensure_fh, rebuilding _fh";
 		$self->_set_fh( $self->_build__fh( $val ) );
-#		say "In File::ensure_fh, after rebuilding _fh";
 	}
 
 	return $self->_fh;
@@ -105,50 +93,36 @@ sub drain {
 	my $self = shift;
 	my @rest = @_;
 
-#	say "in File::drain, args are:  $self", substr("@rest", 0, 20);
-
 	$self->ensure_fh(@rest) if ! $self->has_init;
-#	say "in File::drain, after ensure_fh";
 
 	@rest = $self->format->( @rest ) if $self->has_format;
-#	say "in File::drain, after format";
+
 	$self->_print( @rest );
-#	say "in File::drain, after print";
 
 	if ( ref $self->filepath && $self->has_init ) {
-#		say "in File::drain, clearing fh. has fh? ", $self->_has_fh ? 1 : 0;
 		$self->_clear_fh;
-#		say "in File::drain, just cleared fh.  has fh? ", $self->_has_fh ? 1 : 0;
 	}
 
-#	say "in File::drain, exiting";
 	return;
 }
 
 sub finalize {
 	my $self = shift;
-#	say "in File::finalize";
 	$self->_fh->flush if $self->_has_fh;
-#	say "exiting File::finalize";
 }
 
 sub DEMOLISH {
 	my $self = shift;
-#	say "entering File::DEMOLISH has fh? ", $self->_has_fh ? 1 : 0;
 	$self->finalize;
-#	say "exiting File::DEMOLISH.  has fh? ", $self->_has_fh ? 1 : 0;
 }
 
 before 'apply_transform' => sub {
 	my $self = shift;
 
 	#  If there is an 'init', it is responsible for having init'd the _fh
-#	say "in File::apply_transform; has_init, so will return without rebuilding" if $self->has_init;
-#	say "in File::apply_transform; has_init: ", $self->has_init, ", has_fh: ", $self->_has_fh;
 	return if $self->has_init && $self->_has_fh;
 
 	if ( $self->has_transform ) {
-#		say "In File::apply_transform, about to call ensure_fh";
 		$self->ensure_fh( @_ );
 	}
 };
