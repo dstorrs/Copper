@@ -21,6 +21,8 @@ use Copper::Source::Ints;
 use Copper::Sink::File;
 use Copper::Sink::Log::Log4perl;
 
+chdir $Bin;
+
 BEGIN {
 	is(1, 1, 'testing framework is working');
 	use_ok 'Copper';	 # Verify that it gets loaded from base module
