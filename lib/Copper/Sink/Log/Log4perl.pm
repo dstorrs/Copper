@@ -33,18 +33,19 @@ has '_logger' => (
 	handles => {
 		log_trace => 'trace',
 		log_debug => 'debug',
-		log_info => 'info',
-		log_warn => 'warn',
+		log_info  => 'info',
+		log_warn  => 'warn',
 		log_error => 'error',
 		log_fatal => 'fatal',
 	},
 );
+
 sub _build__logger {
 	my $self = shift;
 	
 	Log::Log4perl->init( $self->config_filepath );
 
-	my $logger = Log::Log4perl::get_logger("Foo::Bar");
+	my $logger = Log::Log4perl::get_logger();
 	return $logger;
 }
 
@@ -76,6 +77,9 @@ our $VERSION = '0.01';
 =item drain
 
 @@TODO
+
+=item log_filepath
+
 
 =back
 

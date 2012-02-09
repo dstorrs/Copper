@@ -4,11 +4,12 @@ use v5.10.1;
 use strict;
 use warnings;
 use feature ':5.10';
+use Carp qw/cluck/;
 
 use Moose;
 use IO::File;
 
-with 'Copper::Sink', 'Copper::Role::HasTransform'; 
+with 'Copper::Sink', 'Copper::Role::HasTransform';
 
 has 'filepath' => (
 	is => 'rw',
@@ -27,22 +28,23 @@ sub _build_mode {
 	return '>>' if ref $filepath;
 	return '>';
 }
-	
+
 
 has '_fh' => (
 	is => 'ro',
-	writer => '_set_fh',
 	isa => 'IO::File',
+	writer => '_set_fh',
 	lazy_build => 1,
 );
 sub _build__fh {
 #	say "in File::_build__fh. args are @_";
-	
+#	cluck "in File::_build__fh. call stack is: \n\n";
+
 	my $self = shift;
 	my $val  = shift // '';
 
 #	say "in File::_build__fh. val is $val";
-	
+
 	my $filepath = $self->filepath;
 	$filepath = $filepath->( $self, $val ) if ref $filepath;
 
@@ -57,19 +59,19 @@ sub _build__fh {
 
 sub ensure_fh {
 #	say "In File::ensure_fh.  args are @_";
-	
+
 	my $self = shift;
 	my $val  = shift;
 
 	my $is_ref = ref $self->filepath;
 
-	# filepath is ref && fh NOT set  => rebuild fh 
-	# filepath is ref && fh is set   => rebuild fh
-	# filepath is NOT ref && fh NOT set rebuild fh
-	# filepath is NOT ref && fh is set => do not rebuild
+	# 	 filepath is ref && fh NOT set  => rebuild fh
+	# 	 filepath is ref && fh is set   => rebuild fh
+	# 	 filepath is NOT ref && fh NOT set rebuild fh
+	# 	 filepath is NOT ref && fh is set => do not rebuild
 
 	if ( !($is_ref) && $self->_fh ) {
-		#    Do nothing
+		# Do nothing
 #		say "In File::ensure_fh, doing nothing";
 	}
 	else {
@@ -92,7 +94,7 @@ sub _print {
 	my $self = shift;
 
 	my $is_ref = ref $self->filepath;
-	
+
 	my $fh = $self->_fh;
 	for ( @_ ) {
 		print $fh $_;
@@ -100,47 +102,53 @@ sub _print {
 }
 
 sub drain {
-#	say "in File::drain, args are:  @_";
-	
 	my $self = shift;
 	my @rest = @_;
-	
-	if ( $self->has_init ) {
-		#    Do nothing -- init is assumed to have set up the filehandle
-	}
-	else {
-		$self->ensure_fh(@rest);
-	}
+
+#	say "in File::drain, args are:  $self", substr("@rest", 0, 20);
+
+	$self->ensure_fh(@rest) if ! $self->has_init;
+#	say "in File::drain, after ensure_fh";
 
 	@rest = $self->format->( @rest ) if $self->has_format;
+#	say "in File::drain, after format";
 	$self->_print( @rest );
+#	say "in File::drain, after print";
 
-	if ( ref $self->filepath ) { $self->_clear_fh };
-	
+	if ( ref $self->filepath && $self->has_init ) {
+#		say "in File::drain, clearing fh. has fh? ", $self->_has_fh ? 1 : 0;
+		$self->_clear_fh;
+#		say "in File::drain, just cleared fh.  has fh? ", $self->_has_fh ? 1 : 0;
+	}
+
+#	say "in File::drain, exiting";
 	return;
 }
 
 sub finalize {
 	my $self = shift;
-
-	$self->_fh->flush;
+#	say "in File::finalize";
+	$self->_fh->flush if $self->_has_fh;
+#	say "exiting File::finalize";
 }
 
 sub DEMOLISH {
 	my $self = shift;
+#	say "entering File::DEMOLISH has fh? ", $self->_has_fh ? 1 : 0;
 	$self->finalize;
+#	say "exiting File::DEMOLISH.  has fh? ", $self->_has_fh ? 1 : 0;
 }
 
 before 'apply_transform' => sub {
 	my $self = shift;
 
-	#    If there is an 'init', it is responsible for having init'd the _fh
-#	say "in File::apply_transform; has_init, so will return without rebuilding" if $self->has_init; 
+	#  If there is an 'init', it is responsible for having init'd the _fh
+#	say "in File::apply_transform; has_init, so will return without rebuilding" if $self->has_init;
 #	say "in File::apply_transform; has_init: ", $self->has_init, ", has_fh: ", $self->_has_fh;
 	return if $self->has_init && $self->_has_fh;
-	
+
 	if ( $self->has_transform ) {
-#		say "In File::apply_transform, about to call ensure_fh";		
+#		say "In File::apply_transform, about to call ensure_fh";
 		$self->ensure_fh( @_ );
 	}
 };
@@ -172,7 +180,7 @@ it is always :utf8 and mode is '>'.
 
 =head2 filepath
 
-REQUIRED attribute.  Where to write the file.  
+REQUIRED attribute.  Where to write the file.
 
 =cut
 
@@ -207,7 +215,7 @@ David K. Storrs, C<< <david.storrs at gmail.com> >>
 
 Please report any bugs or feature requests to C<bug-copper at rt.cpan.org>, or through
 the web interface at L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=Copper>.  I will be notified, and then you'll
-automatically be notified of progress on your bug as I make changes.
+	automatically be notified of progress on your bug as I make changes.
 
 
 
@@ -258,4 +266,4 @@ See http://dev.perl.org/licenses/ for more information.
 
 =cut
 
-1; # End of Copper::Sink::File
+		1;  End of Copper::Sink::File

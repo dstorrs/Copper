@@ -16,13 +16,15 @@ requires 'drain';
 around 'drain' => sub {
 	my ($orig, $self, @vals) = @_;
 
-	$self->$orig(
-		map {
+	my @res = 		map {
 			$self->apply_pre_hook( $_ );
 			my @res = $self->apply_transform( $_ );
 			$self->apply_post_hook( $_ );
 			@res;
 		} @vals
+;
+	$self->$orig(
+		@res
 	);
 };
 

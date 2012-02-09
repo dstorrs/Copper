@@ -164,23 +164,6 @@ sub _desugar_params {
 			}
  		}
  	}
-
-# 	given ( $args{logger} ) {
-# 		when ( blessed $_       ) { }  # All good, do nothing
-# 		when ( ref $_ eq 'HASH' ) {
-# 			my ($name, $watch, $conf_filepath) = map { $args{$_} } qw/name watch conf_filepath/;
-			
-# 			my $init_func = 'Log::Log4perl::' . $watch ? 'init_and_watch' : 'init';
-# 			{
-# 				no warnings;
-# 				$init_func->($conf_filepath);
-# 			}
-# 			$args{logger} = Log::Log4Perl->get_logger( $name );
-# 		}
-# 		default {
-# 			die "Invalid arg in 'logger'; must be either a Log::Log4perl object or a hashref.  Got: $args{logger}";
-# 		}
-# 	}
 	
 	return %args;
 }
