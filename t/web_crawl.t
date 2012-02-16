@@ -46,26 +46,26 @@ test "can download a file to disk" => sub {
 	my $log_filepath = "./logfile.log";
 	unlink $log_filepath;
 	ok( ! -e $log_filepath, "logfile does NOT exist" );
-		
+
 	my $pipe = Copper::Pipe->new(
 		source => { Array => { init => [ @name ] } },
 
 		pre_init_sinks => 1,
-		
+
 		sinks   => [
 			{
 				File => {
 					filepath => $make_path,
 
 					init => sub {
-#						say "in File::init. args are @_";
-						
+						#						say "in File::init. args are @_";
+
 						my ($self, $pipe, @args) = @_;
 						$self->ensure_fh( @args );
 					},
 
 					transform => sub {
-#						say "in File::init. args are @_";
+						#						say "in File::init. args are @_";
 						my ($self, $res) = @_;
 						$res->decoded_content
 					},
@@ -76,25 +76,25 @@ test "can download a file to disk" => sub {
 					config_filepath => 'data/log4perl.conf',
 
 					pre_hook => sub {
-#						say "in 'Log::Log4perl'::pre_hook. args are: @_";
-						
+						#						say "in 'Log::Log4perl'::pre_hook. args are: @_";
+
 						my $self = shift;
 						my $res = shift;
 
-#						say "DEBUGGING about to get Log::Log4perl::log_filepath";
-# 						say "Log::Log4perl log_filepath is: ", Copper::Sink::Log::Log4perl::log_filepath;
-# 						say "DEBUGGING got Log::Log4perl::log_filepath";
-						
+						#						say "DEBUGGING about to get Log::Log4perl::log_filepath";
+						# 						say "Log::Log4perl log_filepath is: ", Copper::Sink::Log::Log4perl::log_filepath;
+						# 						say "DEBUGGING got Log::Log4perl::log_filepath";
+
 						given ( $res ) {
 							when ( $_->is_success ) {
-#						say "in 'Log::Log4perl'::pre_hook. about to log success";
+								#						say "in 'Log::Log4perl'::pre_hook. about to log success";
 								$self->log_info("Successfully retrieved: ", $res->request->uri);
-#						say "in 'Log::Log4perl'::pre_hook. just logged success";
+								#						say "in 'Log::Log4perl'::pre_hook. just logged success";
 							}
 							default {
-#						say "in 'Log::Log4perl'::pre_hook. about to log failure";
+								#						say "in 'Log::Log4perl'::pre_hook. about to log failure";
 								$self->log_info("Failed to retrieve: ", $res->request->uri, "; ", $self->status_line);
-#						say "in 'Log::Log4perl'::pre_hook. just  logged failure";
+								#						say "in 'Log::Log4perl'::pre_hook. just  logged failure";
 							}
 						}
 					},
@@ -114,15 +114,15 @@ test "can download a file to disk" => sub {
 			);
 
 			my $res = $ua->next($profile);
-#					say "IN LWP::UA::transform, args are: @_";
-#			say "LWP::UA::transform returning $res";
-			
+			#					say "IN LWP::UA::transform, args are: @_";
+			#			say "LWP::UA::transform returning $res";
+
 			return $res;
 		},
 	);
 
 	for ( @name ) {
-#		say "in main. val is $_";
+		#		say "in main. val is $_";
 		$pipe->next;
 		ok( -e $make_path->( undef, $_ ), $make_path->( undef, $_ ) . " exists" );
 	}
