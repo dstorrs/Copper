@@ -52,3 +52,4 @@ dbconf
 test_output/
 dirwalk_infiles
 var
+logfile.log
