@@ -68,6 +68,11 @@ STDOUT, etc.  See the specific classes for examples.
 
 =head1 METHODS
 
+=head2 apply_init
+
+If $self has an init, it will be applied.  Otherwise, this is a
+null-op.
+
 =head2 drain
 
 Takes an array of values, sends them on.

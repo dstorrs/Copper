@@ -37,6 +37,7 @@ file_contains(
 
 test "filepath can be determined from the value" => sub {
 	my $make_path = sub {
+		my $obj = shift;
 		my $x = shift;
 		$x =~ s/[ #]/_/g;
 		$test_filepath = lc "/tmp/$x";
@@ -45,7 +46,7 @@ test "filepath can be determined from the value" => sub {
 	new_sink( filepath => $make_path )->drain( msgs() );
 
 	for ( msgs() ) {
-		my $path = $make_path->( $_ );
+		my $path = $make_path->( undef, $_ );
 		ok( -e $path, "$path exists" );
 		is( $_, scalar slurp( $path ), "$path contains $_" );
 		unlink $path;
@@ -67,7 +68,7 @@ sub file_contains {
 	my $expected = shift;
 	my $msg      = shift;
 
-	test "contents match" => sub {
+	test $msg => sub {
 		unlink $test_filepath;
 		ok( ! -e $test_filepath, "Before create, file does not exist" );
 		my $sink = $func->();

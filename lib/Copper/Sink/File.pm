@@ -39,9 +39,10 @@ has '_fh' => (
 sub _build__fh {
 	my $self = shift;
 	my $val  = shift // '';
-
+    my $all = shift // [];
+	
 	my $filepath = $self->filepath;
-	$filepath = $filepath->( $self, $val ) if ref $filepath;
+	$filepath = $filepath->( $self, $val, $all ) if ref $filepath;
 
 	my $mode = $self->mode;
 	my $fh = IO::File->new($filepath, "${mode}:encoding(utf8)")
@@ -53,7 +54,8 @@ sub _build__fh {
 sub ensure_fh {
 	my $self = shift;
 	my $val  = shift;
-
+	my $all  = shift;
+	
 	my $is_ref = ref $self->filepath;
 
 	# 	 filepath is ref && fh NOT set  => rebuild fh
@@ -61,11 +63,11 @@ sub ensure_fh {
 	# 	 filepath is NOT ref && fh NOT set rebuild fh
 	# 	 filepath is NOT ref && fh is set => do not rebuild
 
-	if ( !($is_ref) && $self->_fh ) {
+	if ( !($is_ref) && $self->_has_fh ) {
 		# Do nothing
 	}
 	else {
-		$self->_set_fh( $self->_build__fh( $val ) );
+		$self->_set_fh( $self->_build__fh( $val, $all ) );
 	}
 
 	return $self->_fh;
@@ -78,30 +80,34 @@ has 'format' => (
 	required => 0,
 );
 
+sub _foo {}
 sub _print {
 	my $self = shift;
+	my @all = @_;
+	
+	_foo();
 
 	my $is_ref = ref $self->filepath;
 
-	my $fh = $self->_fh;
-	for ( @_ ) {
+	for ( @all ) {
+		$self->ensure_fh($_, \@all) if ! $self->has_init;
+		my $fh = $self->_fh;
+
 		print $fh $_;
+
+		$self->_clear_fh
+			if ( ref $self->filepath && $self->has_init );
 	}
+
 }
 
 sub drain {
 	my $self = shift;
 	my @rest = @_;
 
-	$self->ensure_fh(@rest) if ! $self->has_init;
-
 	@rest = $self->format->( @rest ) if $self->has_format;
 
 	$self->_print( @rest );
-
-	if ( ref $self->filepath && $self->has_init ) {
-		$self->_clear_fh;
-	}
 
 	return;
 }
@@ -154,7 +160,16 @@ it is always :utf8 and mode is '>'.
 
 =head2 filepath
 
-REQUIRED attribute.  Where to write the file.
+REQUIRED attribute.  Where to write the file; can be either a string
+or a coderef.  If it is a string, the fh will be created once, but if
+it is a ref, the ref will be called once for every value that is sent
+to drain().  There will be three arguments to each call; $self, the
+value currently being printed, and a reference to all the args that
+were passed to drain(), e.g.:
+
+    $self->filepath->($self, $current_val, @all_vals)
+
+filepath() should use $self->ensure_fh to set to fh.
 
 =cut
 
@@ -168,6 +183,11 @@ OPTIONAL attribute.  If defined, this should should be a CODEREF.
 Arguments will be passed through C<format()> before being sent to
 C<drain()>; this is a convenient place to (e.g.) insert spaces /
 commas / translate to JSON, etc.
+
+=head2 ensure_fh
+
+ARGS:  
+Will create the file handle if it does not exist, or do nothing.  Handles the case where filepath() is a coderef.
 
 =head2 finalize
 
