@@ -59,12 +59,12 @@ sub new_obj {
 
 sub correct {
 	my $correct = <<'EOT';
-[yyyy/MM/dd hh:mm:ss ln:] trace test 
-[yyyy/MM/dd hh:mm:ss ln:] debug test 
-[yyyy/MM/dd hh:mm:ss ln:] info test 
-[yyyy/MM/dd hh:mm:ss ln:] warn test 
-[yyyy/MM/dd hh:mm:ss ln:] error test 
-[yyyy/MM/dd hh:mm:ss ln:] fatal test 
+[yyyy/MM/dd hh:mm:ss] trace test 
+[yyyy/MM/dd hh:mm:ss] debug test 
+[yyyy/MM/dd hh:mm:ss] info test 
+[yyyy/MM/dd hh:mm:ss] warn test 
+[yyyy/MM/dd hh:mm:ss] error test 
+[yyyy/MM/dd hh:mm:ss] fatal test 
 EOT
 
 	my $now = DateTime->now;
