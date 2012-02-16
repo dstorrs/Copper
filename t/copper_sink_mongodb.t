@@ -1,4 +1,4 @@
-#!/usr/bin/env perl 
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
@@ -16,11 +16,38 @@ chdir $Bin;
 
 BEGIN {
 	is(1, 1, 'testing framework is working');
-	use_ok 'Copper';  # Verify that it gets loaded from base module
-};
+	use_ok 'Copper';	 # Verify that it gets loaded from base module
+}
+;
 
 lives_ok { new_obj() } "Can create a new Copper::Sink::MongoDB with default params";
 isa_ok( new_obj(), 'Copper::Sink::MongoDB' );
+
+test "config works" => sub {
+	my $defaults = { host => 'localhost', port => 27017, db => 'copper' };
+
+	isa_ok( new_obj()->config, 'HASH' );
+	is_deeply( new_obj()->config, $defaults, "config not set; still works" );
+
+	for (
+		[ [], "provided but all defaults" ],
+		[ [host => 'bleh'], "host set" ],
+		[ [ host => 'bleh', port => 10 ], "config provided with host and port set" ],
+		[ [ host => 'bleh', port => 10, db => 'foo' ], "config provided with host, port, and db set; works" ],
+		[ [ host => 'bleh', port => 10, db => 'foo', w => 2 ], "config supprts w" ],
+		[ [ host => 'bleh', port => 10, db => 'foo', wtimeout => 2 ], "config supprts wtimeout" ],
+	) {
+		my $args = { %$defaults, @{$_->[0]} };
+		is_deeply(   new_obj(config => $args)->config,
+					 $args,
+					 $_->[1],
+				 );
+	}
+};
+
+isa_ok( new_obj()->_connection, 'MongoDB::Connection' );
+isa_ok( new_obj()->db, 'MongoDB::Database' );
+
 
 # START - Add more tests here
 
