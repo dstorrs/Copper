@@ -80,13 +80,10 @@ has 'format' => (
 	required => 0,
 );
 
-sub _foo {}
 sub _print {
 	my $self = shift;
 	my @all = @_;
 	
-	_foo();
-
 	my $is_ref = ref $self->filepath;
 
 	for ( @all ) {
