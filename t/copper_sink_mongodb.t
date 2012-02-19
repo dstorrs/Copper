@@ -22,6 +22,10 @@ BEGIN {
 
 lives_ok { new_obj() } "Can create a new Copper::Sink::MongoDB with default params";
 isa_ok( new_obj(), 'Copper::Sink::MongoDB' );
+isa_ok( new_obj()->_connection, 'MongoDB::Connection' );
+isa_ok( new_obj()->db, 'MongoDB::Database' );
+isa_ok( new_obj()->coll, 'MongoDB::Collection' );
+
 
 test "config works" => sub {
 	my $defaults = { host => 'localhost', port => 27017, db => 'copper' };
@@ -45,9 +49,15 @@ test "config works" => sub {
 	}
 };
 
-isa_ok( new_obj()->_connection, 'MongoDB::Connection' );
-isa_ok( new_obj()->db, 'MongoDB::Database' );
+test "writing to DB works" => sub {
+	my $obj = new_obj( config => { coll_name => 'copper_tests' });
+	my ($db, $coll) = ($obj->db, $obj->coll);
+	$coll->drop;  # Start with an empty collection
 
+	is( $coll->count, 0, "collection has no entries" );
+	$obj->drain( { a => 1 }, { b => 1 }, { c => 1 }, );
+	is( $coll->count, 3, "collection has 3 entries" );
+};
 
 # START - Add more tests here
 

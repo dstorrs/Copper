@@ -6,10 +6,15 @@ with 'Copper::Sink';
 
 use MongoDB;
 
+my $DEFAULT_COLL_NAME = 'col';
+
 sub drain {
 	my $self = shift;
+	my @vals = @_;
 
-	$self
+	my $meth = 'batch_insert';
+	$meth = 'save' if ( @vals == 1 );
+	$self->coll->$meth( \@vals );
 }
 
 has 'config' => (
@@ -31,11 +36,24 @@ around 'config' => sub {
 	$self->$orig;
 };
 
+has 'coll' => (
+	'is' => 'rw',  #  Let the user change it if they want, perhaps in a hook or transform
+	'isa' => 'MongoDB::Collection',
+	lazy_build => 1,
+);
+sub _build_coll {
+	my $self = shift;
+	my $coll_name = $self->_coll_name;
+	
+	$self->db->$coll_name;
+}
+
+sub _coll_name { shift->config->{coll_name} || $DEFAULT_COLL_NAME }
+
 has 'db' => (
 	is  => 'ro',
 	isa => 'MongoDB::Database',
 	lazy_build => 1,
-	builder => '_build_db',
 );
 
 sub _build_db {
@@ -55,9 +73,9 @@ around 'BUILDARGS' => sub {
 		$args{config}->{host} //= 'localhost';
 		$args{config}->{port} //= 27017;
 		$args{config}->{db  } //= 'copper';
-		$args{config}->{col_name} //= 'col';
+		$args{config}->{coll_name} //= $DEFAULT_COLL_NAME;
 	}
-	
+
 	$self->$orig( %args );
 };
 
@@ -73,7 +91,7 @@ sub _build__connection {
 	my %args = %{ $self->config };
 
 	delete $args{db};
-	delete $args{col_name};
+	delete $args{coll_name};
 
 	#
 	#    Support args shown on
@@ -96,7 +114,7 @@ Takes a hashref.  Keys should be:
     host  => default: localhost
     port  => default: 27017
     db    => default: copper
-    col_name => default: col
+    coll_name => name of collection to write to.  default: col
 
     Additionally, all of the attributes listed in
     L<MongoDB::Connection> (e.g. w, wtimeout, auto_reconnect...) are
