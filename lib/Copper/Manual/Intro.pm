@@ -81,8 +81,8 @@ exactly how data flowing through these parts is modified and when.
 						my ($self, $res) = (shift, shift);
 
 						my $uri = $res->request->uri;
-						if ( $res->is_success ) { $self->log_info("Successfully retrieved: ", $res->request->uri)	                    }
-						else                    { $self->log_info("Failed to retrieve: ", $res->request->uri, "; ", $res->status_line)	}
+						if ( $res->is_success ) { $self->log_info("Successfully retrieved: $uri")	                }
+						else                    { $self->log_info("Failed to retrieve: $uri : ", $res->status_line)	}
 					},
 				},
 			},
@@ -92,7 +92,8 @@ exactly how data flowing through these parts is modified and when.
         #    sources have spat out their next value but before anything is sent to the sinks.
 		transform => sub {                              
 			my ($self, $profile) = @_;                  
-                                                        
+
+            #    Create a static LWP::UA object to be used on each pass
 			state $ua = Copper::Source::LWP::UserAgent->new(
 				url => 'placeholder',
 				pre_hook => sub {
@@ -101,9 +102,7 @@ exactly how data flowing through these parts is modified and when.
 				},
 			);
 
-			my $res = $ua->next($profile);
-
-			return $res;
+			return $ua->next($profile);
 		},
 	);
 
