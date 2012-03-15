@@ -63,7 +63,7 @@ after 'next' => sub {
 
 sub multi {
 	my $self = shift;
-	return ;
+	return ;  # @@TODO: return all remaining elements.  Reset curr_index?
 }
 
 1;

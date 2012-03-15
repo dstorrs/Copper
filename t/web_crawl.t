@@ -29,6 +29,8 @@ BEGIN {
 }
 ;
 
+sub log_filepath { "$Bin/web_crawl.log" }
+
 test "can download a file to disk" => sub {
 	my @name = qw/lisanova nigahiga/;
 
@@ -58,14 +60,11 @@ test "can download a file to disk" => sub {
 					filepath => $make_path,
 
 					init => sub {
-						#						say "in File::init. args are @_";
-
 						my ($self, $pipe, @args) = @_;
 						$self->ensure_fh( @args );
 					},
 
 					transform => sub {
-						#						say "in File::init. args are @_";
 						my ($self, $res) = @_;
 						$res->decoded_content
 					},
@@ -76,27 +75,9 @@ test "can download a file to disk" => sub {
 					config_filepath => 'data/log4perl.conf',
 
 					pre_hook => sub {
-						#						say "in 'Log::Log4perl'::pre_hook. args are: @_";
-
-						my $self = shift;
-						my $res = shift;
-
-						#						say "DEBUGGING about to get Log::Log4perl::log_filepath";
-						# 						say "Log::Log4perl log_filepath is: ", Copper::Sink::Log::Log4perl::log_filepath;
-						# 						say "DEBUGGING got Log::Log4perl::log_filepath";
-
-						given ( $res ) {
-							when ( $_->is_success ) {
-								#						say "in 'Log::Log4perl'::pre_hook. about to log success";
-								$self->log_info("Successfully retrieved: ", $res->request->uri);
-								#						say "in 'Log::Log4perl'::pre_hook. just logged success";
-							}
-							default {
-								#						say "in 'Log::Log4perl'::pre_hook. about to log failure";
-								$self->log_info("Failed to retrieve: ", $res->request->uri, "; ", $self->status_line);
-								#						say "in 'Log::Log4perl'::pre_hook. just  logged failure";
-							}
-						}
+						my ($self, $res) = (shift, shift);
+						if ( $res->is_success ) {	$self->log_info("Successfully retrieved: ", $res->request->uri)	}
+						else {	$self->log_info("Failed to retrieve: ", $res->request->uri, "; ", $res->status_line)	}
 					},
 				},
 			},
@@ -114,15 +95,12 @@ test "can download a file to disk" => sub {
 			);
 
 			my $res = $ua->next($profile);
-			#					say "IN LWP::UA::transform, args are: @_";
-			#			say "LWP::UA::transform returning $res";
 
 			return $res;
 		},
 	);
 
 	for ( @name ) {
-		#		say "in main. val is $_";
 		$pipe->next;
 		ok( -e $make_path->( undef, $_ ), $make_path->( undef, $_ ) . " exists" );
 	}
