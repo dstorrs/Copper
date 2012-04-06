@@ -22,9 +22,10 @@ sub drain {
 has 'conf_path' => (
 	is => 'ro',
 	isa => 'Str',
+	default => sub { File::Spec->catfile( $Bin, qw/conf log4perl.conf/ ) },
 );
 
-sub log_filepath {	"$Bin/logfile.log" }
+sub log_filepath {	File::Spec->catfile( $Bin, qw/logfile.log/ ) }
 
 has '_logger' => (
 	is => 'ro',
