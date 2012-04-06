@@ -28,7 +28,7 @@ $Log::Log4perl::DateFormat::GMTIME = 1;
 lives_ok { new_obj() } "Can create a new Copper::Sink::Log::Log4perl with default params";
 isa_ok( new_obj(), 'Copper::Sink::Log::Log4perl' );
 
-is( new_obj()->config_filepath, 'data/log4perl.conf', "got correct config_filepath" );
+is( new_obj()->conf_path, 'data/log4perl.conf', "got correct conf_path" );
 is( new_obj()->log_filepath, "$Bin/logfile.log",  "got correct default log_filepath" );
 
 unlink new_obj()->log_filepath;
@@ -52,7 +52,7 @@ done_testing();
 
 sub new_obj {
 	Copper::Sink::Log::Log4perl->new(
-		config_filepath => 'data/log4perl.conf',
+		conf_path => 'data/log4perl.conf',
 		@_,
 	);
 }

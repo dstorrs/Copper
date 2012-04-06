@@ -19,7 +19,7 @@ sub drain {
 	return @_;
 }
 
-has 'config_filepath' => (
+has 'conf_path' => (
 	is => 'ro',
 	isa => 'Str',
 );
@@ -43,7 +43,7 @@ has '_logger' => (
 sub _build__logger {
 	my $self = shift;
 	
-	Log::Log4perl->init( $self->config_filepath );
+	Log::Log4perl->init( $self->conf_path );
 
 	my $logger = Log::Log4perl::get_logger();
 	return $logger;
