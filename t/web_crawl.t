@@ -11,6 +11,7 @@ use Test::Exception;
 use Test::Group;
 use Data::Dumper;
 
+use File::Temp qw/tempdir/;
 use File::Slurp qw/slurp/;
 
 use FindBin qw/$Bin/;
@@ -34,11 +35,11 @@ sub log_filepath { "$Bin/web_crawl.log" }
 test "can download a file to disk" => sub {
 	my @name = qw/lisanova nigahiga/;
 
+	my $tempdir = tempdir( CLEANUP => 1 );
 	my $make_path = sub {
 		my ($self, $val) = @_;
 		$val =~ s/[ #]/_/g;
-		my $res = lc "/tmp/$val";
-		return $res;
+		return File::Spec->catfile( $tempdir, $val );
 	};
 
 	for ( @name ) {
@@ -65,15 +66,13 @@ test "can download a file to disk" => sub {
 					},
 
 					transform => sub {
-						my ($self, $res) = @_;
-						$res->decoded_content
+						my ($self, $http_response) = @_;
+						$http_response->decoded_content
 					},
 				},
 			},
 			{
 				'Log::Log4perl' => {
-					config_filepath => 'data/log4perl.conf',
-
 					pre_hook => sub {
 						my ($self, $res) = (shift, shift);
 						if ( $res->is_success ) {	$self->log_info("Successfully retrieved: ", $res->request->uri)	}
