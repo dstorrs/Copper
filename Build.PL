@@ -14,6 +14,7 @@ my $builder = Module::Build->new(
     requires => {
         'perl'          => 5.10.1,
 		'Moose'         => 0,
+		'File::Slurp'   => 0,
     },
     add_to_cleanup      => [ 'Copper-*' ],
     create_makefile_pl => 'traditional',
