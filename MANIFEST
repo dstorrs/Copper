@@ -2,13 +2,9 @@ Build.PL
 Changes
 lib/Copper.pm
 lib/Copper/Pipe.pm
-lib/Copper/Pipe/Transform/Identity.pm
-lib/Copper/Role/Emitter.pm
-lib/Copper/Role/Intake.pm
 lib/Copper/Sink.pm
 lib/Copper/Sink/STDOUT.pm
 lib/Copper/Source.pm
-lib/Copper/Source/STDIN.pm
 MANIFEST			This list of files
 README
 t/00-load.t
