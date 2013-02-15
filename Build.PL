@@ -17,6 +17,7 @@ my $build = Module::Build->new(
 		'File::Slurp'   => '0',
 		'File::Temp'    => '0',
 		'FindBin'       => '0',
+		'MongoDB'       => '0.503.2',
 		'Text::CSV'     => '1.21',
 	},
 );
