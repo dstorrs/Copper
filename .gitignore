@@ -4,6 +4,10 @@
 #
 #  Lines starting with # are comments, of course.
 
+Build
+MYMETA.json
+MYMETA.yml
+_build
 .DS_Store
 *~
 *.ignore

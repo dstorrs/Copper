@@ -1,23 +1,24 @@
-use 5.006;
-use strict;
-use warnings;
 use Module::Build;
 
-my $builder = Module::Build->new(
-    module_name         => 'Copper',
-    license             => 'perl',
-    dist_author         => q{David K. Storrs <david.storrs@gmail.com>},
-    dist_version_from   => 'lib/Copper.pm',
-    build_requires => {
-        'Test::More' => 0,
-    },
-    requires => {
-        'perl'          => 5.10.1,
-		'Moose'         => 0,
-		'File::Slurp'   => 0,
-    },
-    add_to_cleanup      => [ 'Copper-*' ],
-    create_makefile_pl => 'traditional',
+my $build = Module::Build->new(
+	module_name => 'Copper',
+	license  => 'perl',
+	dist_abstract => 'A data pipelining system for connecting arbitrary sources to arbirary sinks',
+	build_requires => {
+		'Test::Exception' => '0.31',
+		'Test::Group' => '0.18',
+		'Test::More' => '0.98',
+		'Test::Output' => '1.01',
+	},
+	requires => {
+		'perl'          => '5.10.1',
+		'Data::Dumper'  => '0',
+		'DateTime'      => '0.78',
+		'File::Slurp'   => '0',
+		'File::Temp'    => '0',
+		'FindBin'       => '0',
+		'Text::CSV'     => '1.21',
+	},
 );
 
-$builder->create_build_script();
+$build->create_build_script;
