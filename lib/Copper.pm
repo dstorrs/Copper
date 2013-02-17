@@ -20,11 +20,11 @@ use Copper::Source::LWP::UserAgent;
 use Copper::Sink;
 use Copper::Sink::File;
 use Copper::Sink::Log::Log4perl;
-use Copper::Sink::MongoDB;
+#use Copper::Sink::MongoDB;
 use Copper::Sink::Return;
 use Copper::Sink::STDOUT;
 
-use Copper::Types;
+#use Copper::Types;
 
 1;
 
