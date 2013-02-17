@@ -15,8 +15,10 @@ use Copper::Source::File;
 
 is(1, 1, 'testing framework is working');
 
+my $data_file = "$Bin/../data/copper_source_file.data";
+
 my $file;
-lives_ok { $file = new_file( filepath => "$Bin/data/copper_source_file.data" ) } "Can create a Copper::Source::File with default settings";
+lives_ok { $file = new_file( filepath => $data_file ) } "Can create a Copper::Source::File with default settings";
 
 is_deeply( [ new_file()->next ], [ '  this is a ' ],  "next() works" );
 is_deeply( [ new_file()->multi_n(2) ], [ '  this is a ', 'test file ' ], "multi_n() works" );
@@ -33,4 +35,4 @@ test "trim() works" => sub {
 done_testing();
 
 sub raw_file { Copper::Source::File->new( @_ ) }
-sub new_file { Copper::Source::File->new( filepath => "$Bin/data/copper_source_file.data", @_ ) }
+sub new_file { Copper::Source::File->new( filepath => $data_file, @_ ) }
