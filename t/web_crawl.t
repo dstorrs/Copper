@@ -10,6 +10,7 @@ use Test::More;
 use Test::Exception;
 use Test::Group;
 use Data::Dumper;
+use Net::Ping;
 
 use File::Temp qw/tempdir/;
 use File::Slurp qw/slurp/;
@@ -28,9 +29,31 @@ BEGIN {
 	is(1, 1, 'testing framework is working');
 	use_ok 'Copper';	 # Verify that it gets loaded from base module
 }
-;
+
 
 sub log_filepath { "$Bin/web_crawl.log" }
+
+my $has_net_connection = 0;  #  Assume the worst
+{
+	my $p = Net::Ping->new();
+
+	#
+	#   Test an arbitrary list of big, massively redundant sites.
+	#   It's remotely possible that there's a netsplit and you
+	#   actually do have net access but one of these hosts is not
+	#   accessible, but one of them should be reachable.
+	#
+	for ( 'cnn.com', 'google.com', 'yahoo.com', 'amazon.com' ) {  
+		do { $has_net_connection = 1; last } if $p->ping($_);
+	}
+	if ( $has_net_connection == 1 ) { diag "Ok, you have basic net access, good" }
+	else {
+		diag('No net connection available; skipping all remaining tests');
+		done_testing();
+		exit;
+	}
+}
+
 
 test "can download a file to disk" => sub {
 	my @name = qw/lisanova nigahiga/;

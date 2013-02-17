@@ -13,6 +13,7 @@ my $build = Module::Build->new(
 	},
 
 	build_requires      => {
+		'Net::Ping'               => 0,
 		'Test::Group'             => 0,
 		'Test::Output'            => 0,
 		'Test::Pod'               => 0,
