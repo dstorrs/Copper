@@ -22,7 +22,7 @@ BEGIN {
 
 lives_ok { new_obj() } "Can create a new Copper::Sink::MongoDB with default params";
 isa_ok( new_obj(), 'Copper::Sink::MongoDB' );
-isa_ok( new_obj()->_connection, 'MongoDB::Connection' );
+isa_ok( new_obj()->_client, 'MongoDB::MongoClient' );
 isa_ok( new_obj()->db, 'MongoDB::Database' );
 isa_ok( new_obj()->coll, 'MongoDB::Collection' );
 
@@ -64,9 +64,4 @@ test "writing to DB works" => sub {
 
 done_testing();
 
-sub new_obj {
-	Copper::Sink::MongoDB->new(
-
-		@_,
-	);
-}
+sub new_obj { Copper::Sink::MongoDB->new( @_ ) }

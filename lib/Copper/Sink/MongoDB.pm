@@ -43,9 +43,7 @@ has 'coll' => (
 );
 sub _build_coll {
 	my $self = shift;
-	my $coll_name = $self->_coll_name;
-	
-	$self->db->$coll_name;
+	return $self->db->get_collection( $self->_coll_name );
 }
 
 sub _coll_name { shift->config->{coll_name} || $DEFAULT_COLL_NAME }
@@ -58,10 +56,7 @@ has 'db' => (
 
 sub _build_db {
 	my $self = shift;
-
-	my $db_name    = $self->config->{db};
-	
-	my $database   = $self->_connection->$db_name;
+	return $self->_client->get_database( $self->config->{db} );
 }
 
 around 'BUILDARGS' => sub {
@@ -79,14 +74,14 @@ around 'BUILDARGS' => sub {
 	$self->$orig( %args );
 };
 
-has '_connection' => (
+has '_client' => (
 	is  => 'ro',
-	isa => 'MongoDB::Connection',
+	isa => 'MongoDB::MongoClient',
 	lazy_build => 1,
-	builder => '_build__connection',
+	builder => '_build__client',
 );
 
-sub _build__connection {
+sub _build__client {
 	my $self = shift;
 	my %args = %{ $self->config };
 
@@ -95,12 +90,9 @@ sub _build__connection {
 
 	#
 	#    Support args shown on
-	#    http://search.cpan.org/~kristina/MongoDB-0.45/lib/MongoDB/Connection.pm
-	#    This includes 'w' (how many servers to replicate to before
-	#    considering it a 'safe' write), wtimeout (how long to wait
-	#    for replication), username, password, etc.
+	#    http://search.cpan.org/~kristina/MongoDB-0.45/lib/MongoDB/Client.pm
 	#
-	my $connection = MongoDB::Connection->new( %args );
+	my $connection = MongoDB::MongoClient->new( %args );
 }
 
 1;
@@ -114,10 +106,10 @@ Takes a hashref.  Keys should be:
     host  => default: localhost
     port  => default: 27017
     db    => default: copper
-    coll_name => name of collection to write to.  default: col
+    coll_name => name of collection to write to.  default: 'col'
 
     Additionally, all of the attributes listed in
-    L<MongoDB::Connection> (e.g. w, wtimeout, auto_reconnect...) are
+    L<MongoDB::MongoClient> (e.g. w, wtimeout, auto_reconnect...) are
     supported.
 
 =cut
