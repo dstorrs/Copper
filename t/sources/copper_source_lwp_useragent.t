@@ -8,9 +8,9 @@ use Test::More;
 use Test::Exception;
 use Test::Group;
 use Data::Dumper;
-use Net::Ping;
 
-use lib '../lib';
+use FindBin qw/$Bin/;
+use lib "$Bin/../../lib";
 
 BEGIN {
 	is(1, 1, 'testing framework is working');
@@ -19,7 +19,7 @@ BEGIN {
 
 my $has_net_connection = 0;  #  Assume the worst
 {
-	my $p = Net::Ping->new();
+	my $ua = LWP::UserAgent->new; 
 
 	#
 	#   Test an arbitrary list of big, massively redundant sites.
@@ -27,10 +27,15 @@ my $has_net_connection = 0;  #  Assume the worst
 	#   actually do have net access but one of these hosts is not
 	#   accessible, but one of them should be reachable.
 	#
-	for ( 'cnn.com', 'google.com', 'yahoo.com', 'amazon.com' ) {  
-		do { $has_net_connection = 1; last } if $p->ping($_);
+  PING: for ( 'cnn.com', 'google.com', 'yahoo.com', 'amazon.com' ) { # Yeah, yeah, it's not really a ping, it's an HTTP request. 
+		if ( $ua->get("http://$_/") ) {
+			$has_net_connection = 1;
+			last PING;
+		} 
 	}
-	if ( $has_net_connection == 1 ) { diag "Ok, you have basic net access, good" }
+	if ( $has_net_connection == 1 ) {
+		diag "Ok, you have basic net access, good"
+	}
 	else {
 		diag('No net connection available; skipping all remaining tests');
 		done_testing();

@@ -10,7 +10,7 @@ use Test::More;
 use Test::Exception;
 use Test::Group;
 use Data::Dumper;
-use Net::Ping;
+use LWP::UserAgent;
 
 use File::Temp qw/tempdir/;
 use File::Slurp qw/slurp/;
@@ -33,9 +33,14 @@ BEGIN {
 
 sub log_filepath { "$Bin/web_crawl.log" }
 
+#
+#    @@TODO: The following block was copied from
+#    copper_source_lwp_useragent.t.  If I need it again, I should
+#    refactor it.  --Dks Feb/18/2013
+#
 my $has_net_connection = 0;  #  Assume the worst
 {
-	my $p = Net::Ping->new();
+	my $ua = LWP::UserAgent->new; 
 
 	#
 	#   Test an arbitrary list of big, massively redundant sites.
@@ -43,17 +48,21 @@ my $has_net_connection = 0;  #  Assume the worst
 	#   actually do have net access but one of these hosts is not
 	#   accessible, but one of them should be reachable.
 	#
-	for ( 'cnn.com', 'google.com', 'yahoo.com', 'amazon.com' ) {  
-		do { $has_net_connection = 1; last } if $p->ping($_);
+  PING: for ( 'cnn.com', 'google.com', 'yahoo.com', 'amazon.com' ) { # Yeah, yeah, it's not really a ping, it's an HTTP request. 
+		if ( $ua->get("http://$_/") ) {
+			$has_net_connection = 1;
+			last PING;
+		} 
 	}
-	if ( $has_net_connection == 1 ) { diag "Ok, you have basic net access, good" }
+	if ( $has_net_connection == 1 ) {
+		diag "Ok, you have basic net access, good"
+	}
 	else {
 		diag('No net connection available; skipping all remaining tests');
 		done_testing();
 		exit;
 	}
 }
-
 
 test "can download a file to disk" => sub {
 	my @name = qw/lisanova nigahiga/;
