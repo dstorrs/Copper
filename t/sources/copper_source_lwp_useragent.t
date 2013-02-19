@@ -34,7 +34,8 @@ my $has_net_connection = 0;  #  Assume the worst
 		} 
 	}
 	if ( $has_net_connection == 1 ) {
-		diag "Ok, you have basic net access, good"
+		; # Do nothing
+		# diag "Ok, you have basic net access, good"
 	}
 	else {
 		diag('No net connection available; skipping all remaining tests');
