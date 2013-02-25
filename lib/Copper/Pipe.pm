@@ -85,7 +85,7 @@ has 'sinks' => (
 has 'pre_init_sinks' => (
 	is => 'ro',
 	isa => 'Bool',
-	default => 0,
+	default => 1,
 );
 
 has 'filters' => (

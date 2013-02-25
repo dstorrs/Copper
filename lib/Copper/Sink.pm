@@ -32,7 +32,10 @@ has 'init' => (
 	is => 'ro',
 	isa => 'Maybe[CodeRef]',
 	predicate => 'has_init',
+	builder => '_build_init',
+	lazy => 1,		
 );
+sub _build_init { sub {} }
 
 sub apply_init {
 	my $self = $_[0];
