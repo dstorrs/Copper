@@ -21,7 +21,6 @@ my $pipe = Copper::Pipe->new(
 		);
 		return $ua->next($username);
 	},
-
 	sinks => [
 		{
 			File => {
