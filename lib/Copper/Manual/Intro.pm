@@ -47,27 +47,46 @@ exactly how data flowing through these parts is modified and when.
 
     #  
     #    A simple webcrawler that pulls data from the YouTube API.
-    #    You feed it an array of names (e.g. qw/redbull lisanova
-    #    raywilliamjohnson/); it downloads the profile feed for each
-    #    of those users, writes the feed to disk, and logs whether or
-    #    not it was successful.
+    #    The sequence is:
+    #  
+    #    1. There is one Source, an array of username strings
+    #  
+    #    2. A Transform turns those strings into HTTP response objects
+    #    containing the profile data.
+    #  
+    #    3. There are two sinks: first we write the results to a file,
+    #    then we log whether or not the file was successfully created.
     #  
     my @names = qw/redbull lisanova raywilliamjohnson/;
     my $pipe = Copper::Pipe->new(
-        source => {
+
+        source => { 
             Array => { init => [ @names ] }
         },
 
-        pre_init_sinks => 1,
+        transform => sub {
+            my ($self, $profile) = @_;                  
 
-        sinks   => [
+            #    Create a static LWP::UA object to be used on each pass
+            state $ua = Copper::Source::LWP::UserAgent->new(
+                url => 'placeholder',
+                pre_hook => sub {
+                    my ($self, $val) = @_;
+                    $self->url( join('', "http://gdata.youtube.com/feeds/api/users/", $val) )
+                },
+            );
+
+            return $ua->next($profile);
+        },
+
+        sinks   => [ 
             #    Write each feed to a particular file
             {
                 File => {
                     filepath => sub {                   # LisaNova's profile gets saved in '/tmp/lisanova'
-                        my ($self, $val) = @_;          # Could also use a string here (not a subref) but then it
-                        $val =~ s/[ #]/_/g;             # would be overwritten with each new value through the pipe
-                        lc "/tmp/$val";
+                        my ($self, $val) = @_;          # Could also use a string here (not a subref) but then 
+                        $val =~ s/[ #]/_/g;             # the file would be overwritten with each new value 
+                        lc "/tmp/$val";                 # through the pipe.
                     },
 
                     init => sub {                       # Recalculate the filepath for each new value
@@ -82,12 +101,18 @@ exactly how data flowing through these parts is modified and when.
                 },
             },
 
-            #    Log the results of the write
+            #    
+            #    Log the results of the write.  Note that when we get
+            #    to here, we are no longer receiving HTTP response
+            #    objects, we are receiving strings (the content of
+            #    those objects), because of the transform in the prior
+            #    sink.
+            #    
             {
                 'Log::Log4perl' => {                    
                     config_filepath => 'data/log4perl.conf',
 
-                    pre_hook => sub {                       #  Again, hooks do not change the value seen by later sinks.
+                    pre_hook => sub {                       #  Unlink transforms, hooks do not change the value seen by later sinks.
                         my ($self, $res) = (shift, shift);
 
                         my $uri = $res->request->uri;
@@ -97,23 +122,6 @@ exactly how data flowing through these parts is modified and when.
                 },
             },
         ],
-
-        #    This transform is applied to all values going through the pipe, after all
-        #    sources have spat out their next value but before anything is sent to the sinks.
-        transform => sub {                              
-            my ($self, $profile) = @_;                  
-
-            #    Create a static LWP::UA object to be used on each pass
-            state $ua = Copper::Source::LWP::UserAgent->new(
-                url => 'placeholder',
-                pre_hook => sub {
-                    my ($self, $val) = @_;
-                    $self->url( join('', "http://gdata.youtube.com/feeds/api/users/", $val) )
-                },
-            );
-
-            return $ua->next($profile);
-        },
     );
 
 =cut

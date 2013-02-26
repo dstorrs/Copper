@@ -58,11 +58,10 @@ sub ensure_fh {
 	
 	my $is_ref = ref $self->filepath;
 
-	# 	 filepath is ref && fh NOT set  => rebuild fh
-	# 	 filepath is ref && fh is set   => rebuild fh
-	# 	 filepath is NOT ref && fh NOT set rebuild fh
-	# 	 filepath is NOT ref && fh is set => do not rebuild
-
+	# 	 filepath is ref                    => rebuild fh
+	# 	 filepath is NOT ref && fh NOT set  => rebuild fh
+	# 	 filepath is NOT ref && fh is set   => do not rebuild
+	#
 	if ( !($is_ref) && $self->_has_fh ) {
 		# Do nothing
 	}

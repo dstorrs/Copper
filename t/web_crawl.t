@@ -86,8 +86,22 @@ test "can download a file to disk" => sub {
 	my $pipe = Copper::Pipe->new(
 		source => { Array => { init => [ @name ] } },
 
-		pre_init_sinks => 1,
+		transform => sub {
+			my ($self, $profile) = @_;
 
+			state $ua = Copper::Source::LWP::UserAgent->new(
+				url => 'placeholder',
+				pre_hook => sub {
+					my ($self, $val) = @_;
+					$self->url( join('', "http://gdata.youtube.com/feeds/api/users/", $val) )
+				},
+			);
+
+			my $res = $ua->next($profile);
+
+			return $res;
+		},
+		
 		sinks   => [
 			{
 				File => {
@@ -114,25 +128,9 @@ test "can download a file to disk" => sub {
 				},
 			},
 		],
-
-		transform => sub {
-			my ($self, $profile) = @_;
-
-			state $ua = Copper::Source::LWP::UserAgent->new(
-				url => 'placeholder',
-				pre_hook => sub {
-					my ($self, $val) = @_;
-					$self->url( join('', "http://gdata.youtube.com/feeds/api/users/", $val) )
-				},
-			);
-
-			my $res = $ua->next($profile);
-
-			return $res;
-		},
 	);
 
-	for ( @name ) {
+	for ( @name ) {  
 		$pipe->next;
 		ok( -e $make_path->( undef, $_ ), $make_path->( undef, $_ ) . " exists" );
 	}
